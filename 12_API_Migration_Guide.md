@@ -391,6 +391,56 @@ end
 WorldMapFrame:AddDataProvider(CreateFromMixins(MyAddonDataProviderMixin))
 ```
 
+> **Important:** `AddDataProvider` inserts an addon object as a key into `WorldMapFrame.dataProviders`. While `secureexecuterange` isolates callbacks between data providers, the tainted key can still cause issues in some scenarios. For taint-sensitive addons, consider manual pin lifecycle management instead.
+
+#### Unsecured Frame Pools for Map Pins
+
+`CreateFramePool` (aliased to `CreateSecureFramePool` in 12.0.0) uses proxy taint tracking — frames acquired from secure pools carry taint attribution from the caller. Use `CreateUnsecuredRegionPoolInstance` instead (same pattern as HereBeDragons-Pins-2.0):
+
+```lua
+-- Create unsecured pool and pre-register in pinPools
+local TEMPLATE = "MyAddonPinTemplate"
+local pool = CreateUnsecuredRegionPoolInstance(TEMPLATE)
+pool.parent = WorldMapFrame:GetCanvas()
+pool.createFunc = function()
+    local frame = CreateFrame("Frame", nil, WorldMapFrame:GetCanvas())
+    frame:SetSize(1, 1)
+    frame:EnableMouse(false)
+    frame:EnableMouseMotion(false)
+    return Mixin(frame, MyPinMixin)
+end
+pool.resetFunc = function(pinPool, pin)
+    pin:Hide()
+    pin:ClearAllPoints()
+end
+WorldMapFrame.pinPools[TEMPLATE] = pool
+
+-- Now AcquirePin uses the unsecured pool automatically
+local pin = WorldMapFrame:AcquirePin(TEMPLATE, ...)
+```
+
+> **Note:** There is no `MapCanvasPinTemplate` in the Blizzard UI source. Pin templates should be plain `<Frame>` elements with a `mixin` attribute, or created entirely in Lua via the pool's `createFunc`. Pin mixins should inherit from `MapCanvasPinMixin` via `CreateFromMixins(MapCanvasPinMixin)`.
+
+#### Pin Lifecycle: OnReleased Before OnLoad
+
+When `ObjectPoolBaseMixin:Acquire()` creates a **new** frame, it calls the `resetFunc` (which triggers `OnReleased`) **before** `OnLoad`. This means `OnReleased` must be safe to call on a freshly-created, uninitialized pin:
+
+```lua
+function MyPinMixin:OnReleased()
+    if self.animationGroup then  -- nil check required!
+        self.animationGroup:Stop()
+    end
+    MapCanvasPinMixin.OnReleased(self)
+end
+```
+
+Pin mixins should also include no-ops to prevent combat errors during pin acquisition:
+
+```lua
+MyPinMixin.SetPassThroughButtons = function() end
+MyPinMixin.CheckMouseButtonPassthrough = function() end
+```
+
 **DO NOT reparent from GetCanvas() to ScrollContainer** -- this breaks coordinate space (pins become tiny/mispositioned). This was tested and confirmed to fail.
 
 **pcall() for Tooltip Safety:**
@@ -401,6 +451,27 @@ local ok, err = pcall(GameTooltip_AddQuestRewardsToTooltip, GameTooltip, questID
 if not ok then
     -- Tooltip failed due to taint; silently skip rather than crashing
 end
+```
+
+#### GameTooltip.ItemTooltip Stale State
+
+A critical taint pitfall: `GameTooltip:SetOwner()` fires `OnTooltipCleared` which clears `insertedFrames` (progress bars) but does **NOT** hide `GameTooltip.ItemTooltip`. If a previous Blizzard tooltip interaction (e.g., hovering a world quest pin with item rewards) left `ItemTooltip` in a "shown" state, calling `GameTooltip:Show()` from addon code triggers `GameTooltip_CalculatePadding`, which finds `ItemTooltip:IsShown() == true` (stale) and performs arithmetic on `ItemTooltip:GetSize()` from addon-tainted context — tainting the dimensions.
+
+**Always hide `ItemTooltip` after `SetOwner()`:**
+
+```lua
+GameTooltip:SetOwner(myFrame, "ANCHOR_CURSOR")
+if GameTooltip.ItemTooltip then GameTooltip.ItemTooltip:Hide() end
+GameTooltip:AddLine("My tooltip text")
+GameTooltip:Show()
+```
+
+Also avoid `GameTooltip_ShowProgressBar` — it calls `GameTooltip_InsertFrame` which does `frame:GetWidth()`, returning a secret value in tainted context. Use a text fallback instead:
+
+```lua
+-- Instead of: GameTooltip_ShowProgressBar(GameTooltip, ...)
+-- Use:
+GameTooltip:AddLine(QUEST_DASH .. PERCENTAGE_STRING:format(percent), r, g, b)
 ```
 
 ---

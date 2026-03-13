@@ -105,7 +105,8 @@ When reviewing addons with multiple files:
 - Handle Secret Values in combat (12.0.0+) - use `issecretvalue()` to check
 - Use C_ActionBar, C_CombatLog namespaces (globals removed in 12.0.0)
 - **Nameplate click targeting (12.0.0+)**: Never `Hide()` UnitFrame (use `SetAlpha(0)`), set `EnableMouse(false)` on custom overlay frames
-- **Map canvas taint (12.0.0+)**: Addon frames on `WorldMapFrame:GetCanvas()` cause taint. Use `nil` frame names, `EnableMouse(false)`, prefer Blizzard's pin system (`AcquirePin`/data providers). Wrap tooltip calls with `pcall()`.
+- **Map canvas taint (12.0.0+)**: Addon frames on `WorldMapFrame:GetCanvas()` cause taint. Use `nil` frame names, `EnableMouse(false)`. For map pins, use `CreateUnsecuredRegionPoolInstance` (not `CreateFramePool`) and pre-register in `WorldMapFrame.pinPools`. `AddDataProvider` inserts tainted keys; prefer manual pin lifecycle. Pin `OnReleased` fires before `OnLoad` on first acquire — must be nil-safe. No `MapCanvasPinTemplate` exists; use plain frames with mixin.
+- **GameTooltip taint (12.0.0+)**: `SetOwner()` does NOT hide `ItemTooltip` — always call `GameTooltip.ItemTooltip:Hide()` after `SetOwner()` to prevent stale state from tainting dimensions via `GameTooltip_CalculatePadding`. Avoid `GameTooltip_ShowProgressBar` (calls `GetWidth()` which returns secret). Wrap `GameTooltip_AddQuestRewardsToTooltip` with `pcall()`.
 - **Secret values beyond combat**: Secrets appear in ANY tainted execution context, not just `InCombatLockdown()`. Always use `issecretvalue()` checks.
 - **Quest reward data**: `HaveQuestData()` does NOT guarantee rewards are loaded. `GetNumQuestLogRewards()` can transiently return 0. Cache known-good data and use `RequestLoadQuestByID()`.
 - **Debug Output**: NEVER output debug info to chat frames. ALWAYS create a scrollable, copy-pasteable window (EditBox with multi-line support) so users can easily select and copy debug output for reporting issues
