@@ -358,14 +358,29 @@ For `WorldMapFrame`, use `EventRegistry` callbacks instead of `hooksecurefunc`:
 -- WRONG: hooksecurefunc taints the secure call stack
 hooksecurefunc(WorldMapFrame, "OnShow", function() --[[ addon code ]] end)
 
--- CORRECT: EventRegistry fires callbacks outside the secure call stack
+-- WRONG: RegisterCallback with addon object as owner key — the addon object
+-- is stored as a KEY in the internal callback table. When secureexecuterange
+-- iterates this table (e.g., during WorldMapMixin:OnShow()), the tainted key
+-- leaks residual taint to the caller's execution context, tainting all
+-- subsequent map operations including pin event handlers.
 EventRegistry:RegisterCallback("WorldMapOnShow", function()
-    -- Safe to run addon code here
-end, myAddon)
+    -- ...
+end, myAddon)  -- myAddon is tainted owner key!
 
-EventRegistry:RegisterCallback("MapCanvas.MapSet", function(_, mapID)
+-- CORRECT: RegisterCallbackWithHandle generates an anonymous numeric owner
+-- key, keeping the callback table free of tainted addon objects. Store the
+-- returned handle for later unregistration.
+local mapShowHandle = EventRegistry:RegisterCallbackWithHandle("WorldMapOnShow", function()
+    -- Safe to run addon code here
+end)
+
+local mapSetHandle = EventRegistry:RegisterCallbackWithHandle("MapCanvas.MapSet", function(_, mapID)
     -- Fires when the map changes, safe replacement for hooking SetMapID
-end, myAddon)
+end)
+
+-- To unregister later:
+-- mapShowHandle:Unregister()
+-- mapSetHandle:Unregister()
 ```
 
 For `FlightMapFrame`, if `hooksecurefunc` is unavoidable (e.g., hooking `RefreshAllDataProviders`), defer the callback with `C_Timer.After(0, ...)` to move addon code out of the secure call stack:
