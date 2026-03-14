@@ -512,6 +512,193 @@ Also avoid `GameTooltip_ShowProgressBar` — it calls `GameTooltip_InsertFrame` 
 GameTooltip:AddLine(QUEST_DASH .. PERCENTAGE_STRING:format(percent), r, g, b)
 ```
 
+#### Private Tooltip Pattern (Definitive Fix for GameTooltip Taint)
+
+The most reliable way to eliminate ALL GameTooltip taint is to avoid the shared `GameTooltip` entirely. Create a private tooltip frame for your addon's use:
+
+```lua
+local tooltip = CreateFrame("GameTooltip", "MyAddonTooltip", UIParent, "GameTooltipTemplate,BackdropTemplate")
+
+-- Required for shift+hover gear comparison to work
+tooltip.supportsItemComparison = true
+tooltip.shoppingTooltips = { ShoppingTooltip1, ShoppingTooltip2 }
+
+-- Use exactly like GameTooltip
+tooltip:SetOwner(myFrame, "ANCHOR_RIGHT")
+tooltip:SetHyperlink(itemLink)
+tooltip:Show()
+```
+
+This completely avoids `GameTooltip_CalculatePadding`, `ItemTooltip` stale state, and all other shared tooltip taint vectors. The `GameTooltipTemplate` provides full visual parity with the default tooltip. This pattern is used by HandyNotes and other map pin addons to avoid taint when displaying quest/item tooltips on the world map.
+
+**When to use a private tooltip vs. patching GameTooltip:**
+- **Private tooltip**: Best for map pins, custom frames, or any context where you control the tooltip lifecycle. Eliminates taint entirely.
+- **Patching GameTooltip**: Only necessary when you must modify or extend the shared tooltip that Blizzard code also uses (e.g., hooking `OnTooltipSetItem`).
+
+---
+
+#### Taint Workaround Strategies (12.0.0+) - Cross-Addon Research
+
+The following strategies are derived from analyzing how major addons (ElvUI, Zygor, HandyNotes, HereBeDragons, WeakAuras) handle taint in 12.0.0+. These represent hard-won practical knowledge about what works and what does not.
+
+##### What Does NOT Work
+
+**1. `securecallfunction` does NOT prevent C++ event taint attribution.**
+
+When addon code calls C++ APIs like `C_QuestLog.AddWorldQuestWatch()`, `ShowUIPanel()`, or `WorldMapFrame:SetMapID()`, the resulting C++ events (`QUEST_WATCH_LIST_CHANGED`, `SUPER_TRACKING_CHANGED`, `OnMapChanged`) carry the addon's taint attribution regardless of `securecallfunction` wrapping. This was confirmed across multiple major addons -- ElvUI does not even use `securecallfunction` at all.
+
+```lua
+-- DOES NOT HELP with C++ event attribution:
+securecallfunction(C_QuestLog.AddWorldQuestWatch, questID)
+-- The QUEST_WATCH_LIST_CHANGED event is still attributed to the addon
+```
+
+`securecallfunction` IS useful for calling Blizzard Lua functions in their own security context (e.g., avoiding taint when calling a Blizzard helper that reads protected state), but it cannot change how the C++ engine attributes events triggered by API calls.
+
+**2. `C_Timer.After(0, ...)` does NOT break C++ event taint attribution.**
+
+The timer callback runs in addon context, and API calls from it still attribute events to the addon:
+
+```lua
+-- DOES NOT HELP:
+C_Timer.After(0, function()
+    C_QuestLog.AddWorldQuestWatch(questID)  -- Still tainted
+end)
+```
+
+`C_Timer.After(0, ...)` IS useful for deferring code to the next frame (e.g., avoiding event race conditions), but it does not change the taint attribution of the deferred code.
+
+**3. State-changing C++ API calls from addon code are inherently taint-producing.**
+
+There is no Lua-level workaround for this. When addon code calls an API that changes game state (quest watches, map navigation, UI panel visibility), the resulting events will always be attributed to the addon. This is by design in the 12.0.0 taint system.
+
+##### What DOES Work
+
+**1. Private tooltips (see section above).**
+
+Using `CreateFrame("GameTooltip", "MyAddonTooltip", ...)` instead of the shared `GameTooltip` eliminates all tooltip taint.
+
+**2. `SetPassThroughButtons` no-op override for map pins.**
+
+Both HandyNotes and Zygor override `SetPassThroughButtons` on their pin mixins to prevent `ADDON_ACTION_BLOCKED` errors when Blizzard's map canvas calls this protected function on addon-created pins:
+
+```lua
+MyPinMixin.SetPassThroughButtons = function() end
+MyPinMixin.CheckMouseButtonPassthrough = function() end
+```
+
+**3. `CreateUnsecuredRegionPoolInstance` for map pin pools.**
+
+Used by HereBeDragons-Pins to avoid taint from secure frame pool proxy tracking. Pre-register the pool in `WorldMapFrame.pinPools["TemplateName"]` so Blizzard's `AcquirePin` uses the unsecured pool (see the "Unsecured Frame Pools for Map Pins" section above).
+
+**4. `OpenWorldMap(mapID)` for single-call map opening.**
+
+A single C++ call alternative to the two-call pattern of `ShowUIPanel(WorldMapFrame)` + `WorldMapFrame:SetMapID(mapID)`. Used by Zygor. May produce less taint than the two-call pattern since it generates fewer intermediate events:
+
+```lua
+-- Two-call pattern (more taint surface):
+ShowUIPanel(WorldMapFrame)
+WorldMapFrame:SetMapID(mapID)
+
+-- Single-call alternative (less taint surface):
+OpenWorldMap(mapID)
+```
+
+**5. No-op override of protected methods on controlled frames.**
+
+ElvUI replaces protected methods with `function() end` on frames the addon fully controls, preventing `ADDON_ACTION_BLOCKED` errors:
+
+```lua
+-- If your addon completely replaces a Blizzard frame's behavior:
+frame.SetPassThroughButtons = function() end
+```
+
+**6. `SetScale(0.00001)` instead of `Hide()` during combat.**
+
+When `Hide()` on a frame would trigger taint (because it is a restricted operation during combat), `SetScale(0.00001)` makes the frame invisible without calling the protected `Hide` method:
+
+```lua
+if InCombatLockdown() then
+    frame:SetScale(0.00001)  -- Effectively invisible
+else
+    frame:Hide()
+end
+```
+
+**7. `SetAlpha(0)` instead of `Hide()` for UI elements that taint when hidden.**
+
+Similar to the nameplate pattern, this keeps the frame technically visible while making it invisible to the user. The frame's children remain active (important for HitTestFrame, event handlers, etc.).
+
+**8. Nil out global frame references to prevent Blizzard discovery.**
+
+If Blizzard code looks up a global frame name to manipulate it, and that frame was modified by addon code, the interaction can cause taint. Setting the global reference to nil prevents Blizzard code from finding it:
+
+```lua
+-- After taking control of a Blizzard frame:
+_G["BlizzardFrameName"] = nil
+```
+
+**9. Defer operations to `PLAYER_REGEN_ENABLED`.**
+
+Queue restricted operations during combat and execute them when combat ends:
+
+```lua
+local pendingActions = {}
+
+local function DoOrDefer(action)
+    if InCombatLockdown() then
+        table.insert(pendingActions, action)
+    else
+        action()
+    end
+end
+
+frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+frame:SetScript("OnEvent", function()
+    for _, action in ipairs(pendingActions) do
+        action()
+    end
+    wipe(pendingActions)
+end)
+```
+
+**10. `pcall()` around APIs that may encounter secret values.**
+
+Catch secret value errors gracefully with fallback behavior:
+
+```lua
+local ok, health = pcall(UnitHealth, "target")
+if not ok or (issecretvalue and issecretvalue(health)) then
+    -- Fallback to percentage API
+    local pct = UnitHealthPercent("target", false, CurveConstants.ScaleTo100) or 0
+    healthBar:SetValue(pct)
+else
+    healthBar:SetMinMaxValues(0, UnitHealthMax("target"))
+    healthBar:SetValue(health)
+end
+```
+
+**11. Clone Blizzard functions and remove the tainted call.**
+
+When a Blizzard function contains one taint-producing call among otherwise-safe operations, copy the function and remove or replace the problematic call:
+
+```lua
+-- If BlizzardFunction() does A, B, C and B causes taint:
+local function MyCleanVersion(...)
+    A(...)
+    -- Skip B (the tainted call)
+    C(...)
+end
+```
+
+##### Practical Approach Summary
+
+For addons that must call state-changing C++ APIs (quest tracking, map navigation, etc.), the realistic options are:
+
+1. **Avoid the calls entirely** -- Use read-only mode where possible (display data without modifying game state).
+2. **Accept the taint** -- Like Zygor, call the APIs and accept that ADDON_ACTION_BLOCKED errors will appear in the error log (most users never see these unless they enable Lua error display).
+3. **Hybrid approach with user toggle** -- Provide a setting that enables/disables the taint-producing features, letting users choose between functionality and a clean error log.
+
 ---
 
 #### Quest Reward Data Loading Patterns (12.0.0+)
