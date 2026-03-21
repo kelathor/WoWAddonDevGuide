@@ -542,6 +542,46 @@ local maxLevelPlayers = FilterTable(players, function(player)
 end);
 ```
 
+### Common Table Pitfalls
+
+#### Empty Tables Are Truthy
+
+In Lua, empty tables (`{}`) evaluate as `true` in conditionals. This is a common source of bugs:
+
+```lua
+-- WRONG: This is ALWAYS true, even if the table is empty
+local rewards = {};
+if rewards then
+    print("Has rewards!");  -- Always prints!
+end
+
+-- RIGHT: Check if the table actually has entries
+-- For array-like tables:
+if rewards and #rewards > 0 then
+    print("Has rewards!");
+end
+
+-- For hash/mixed tables:
+if rewards and next(rewards) ~= nil then
+    print("Has rewards!");
+end
+```
+
+**Real-world example:** An addon caches quest reward data. Currency rewards are initialized as an empty table (`quest.reward.currencies = {}`), but no currencies are actually found. Later, a cache validity check uses `if quest.reward.currencies then` — which always passes because `{}` is truthy. The cache incorrectly treats the quest as having currency data, preventing it from ever re-fetching the real rewards.
+
+```lua
+-- WRONG: Empty table passes the check
+quest.reward.currencies = {};  -- initialized but no entries added
+if quest.reward.currencies then  -- true! {} is truthy
+    -- Incorrectly thinks currencies exist
+end
+
+-- RIGHT: Check for actual entries
+if quest.reward.currencies and #quest.reward.currencies > 0 then
+    -- Only true when currencies actually exist
+end
+```
+
 ---
 
 ## Iterator and Enumeration Patterns
