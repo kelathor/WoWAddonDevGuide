@@ -754,6 +754,8 @@ cooldown:SetCooldownFromDurationObject(durationObject)
 cooldown:SetCooldownFromExpirationTime(expirationTime)
 ```
 
+> **12.0.1 Restriction:** `SetCooldown()`, `SetCooldownFromExpirationTime()`, `SetCooldownDuration()`, and `SetCooldownUNIX()` are now **restricted from tainted addon code with secret values**. `SetCooldownFromDurationObject()` is the only method that still accepts secret duration data. Use `C_Spell.GetSpellCooldownDuration()` or `C_LossOfControl.GetActiveLossOfControlDuration()` to obtain duration objects.
+
 **Cooldown Control:**
 ```lua
 -- Pause/unpause the cooldown animation (12.0.0)

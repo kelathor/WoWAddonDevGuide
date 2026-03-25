@@ -283,6 +283,9 @@ end
 - `UnitGetTotalAbsorbs()`, `UnitGetIncomingHeals()`
 - `C_ActionBar.GetActionInfo()` (id field)
 - All C_DamageMeter data fields
+- `UnitCreatureID()` returns `nil` (not secret) when unit identity is secret (12.0.1)
+- `Frame:GetEffectiveAlpha()`, `StatusBar:IsStatusBarDesaturated()`, `Texture:IsDesaturated()` return `nil` with secret aspects (12.0.1)
+- Cooldown API fields `isEnabled` and `maxCharges` are now **non-secret** (12.0.1)
 
 **Non-Secret Alternatives:**
 - `UnitHealthPercent(unit, false, CurveConstants.ScaleTo100)` - Returns 0-100 (NOT SECRET)
@@ -317,6 +320,9 @@ See `12a_Secret_Safe_APIs.md` for complete documentation.
 - **C++ event taint attribution (12.0.0+):** State-changing C++ API calls from addon code (e.g., `C_QuestLog.AddWorldQuestWatch()`, `ShowUIPanel()`, `WorldMapFrame:SetMapID()`) inherently produce tainted events. Neither `securecallfunction` nor `C_Timer.After(0, ...)` prevents this. Practical options: avoid the calls (read-only mode), accept the taint, or provide a user toggle. `pcall()` catches secret value errors; `SetScale(0.00001)` or `SetAlpha(0)` replaces `Hide()` during combat; defer restricted ops to `PLAYER_REGEN_ENABLED`.
 - **Quest reward data loading:** `HaveQuestData(questID)` does NOT guarantee reward data is loaded. `GetNumQuestLogRewards(questID)` can transiently return 0 during `QUEST_LOG_UPDATE`. Use `C_QuestLog.RequestLoadQuestByID()` + `QUEST_DATA_LOAD_RESULT` event, and cache known-good reward data.
 - **C_TaskQuest.GetQuestsOnMap():** Returns quests from queried map AND child sub-zones. Child quests have `mapID` remapped to parent; use `C_TaskQuest.GetQuestZoneID(questID)` for the true zone.
+- **Cooldown Frame Restrictions (12.0.1):** `SetCooldown()`, `SetCooldownFromExpirationTime()`, `SetCooldownDuration()`, `SetCooldownUNIX()` — **restricted** from tainted addon code with secret values. `SetCooldownFromDurationObject()` — the **ONLY** method that accepts secret values for cooldown display. `ActionButton_ApplyCooldown` — secure delegate removed, throws Lua errors with secrets. Use `C_Spell.GetSpellCooldownDuration()` or `C_LossOfControl.GetActiveLossOfControlDuration()` to get duration objects. New non-secret fields on cooldown APIs: `isActive` (should UI render cooldown?), `isEnabled`, `maxCharges`. Cooldown aura spells now baked into API results (no need for `C_UnitAuras.GetCooldownAuraBySpellID`).
+- **Private aura APIs combat-restricted (12.0.1):** `AddPrivateAuraAnchor`, `RemovePrivateAuraAnchor`, `SetPrivateWarningTextAnchor`, `AddPrivateAuraAppliedSound`, `RemovePrivateAuraAppliedSound` — set up during init, not during combat.
+- **String format with secrets (12.0.1):** `string.format` precision specifiers (e.g., `"%.1s"`) restricted with secret strings — use `SetFormattedText` for display.
 
 ## Common Libraries
 

@@ -1591,6 +1591,8 @@ Minor refinements to 12.0.0 systems:
 GetActionCooldownRemainingPercent()  -- REMOVED, use GetActionCooldown() math
 ```
 
+> **Note (12.0.1):** Doing arithmetic on secret `startTime`/`duration` values from `GetActionCooldown()` will fail in tainted contexts. Use duration objects via `C_Spell.GetSpellCooldownDuration()` or `C_LossOfControl.GetActiveLossOfControlDuration()` instead.
+
 **Restored APIs:**
 ```lua
 -- Adventure Journal CVars restored:
@@ -1664,6 +1666,112 @@ Settings.RegisterAddOnCategory(category)
 -- On the panel, add a button to open standalone config
 -- (Or just hook your slash command to call OpenStandaloneOptions)
 ```
+
+#### Patch 12.0.1 Hotfix: Cooldown & Security Changes
+
+Hotfixed before Mythic raids/M+ opening (2026-03-21). These changes primarily affect action bar addons and cooldown tracking addons.
+
+**Cooldown Frame Method Restrictions:**
+
+The following `CooldownFrame` methods are now **restricted from tainted code with secret values**:
+- `SetCooldown(start, duration)`
+- `SetCooldownFromExpirationTime(expirationTime)`
+- `SetCooldownDuration(duration)`
+- `SetCooldownUNIX(start, duration)`
+
+**`SetCooldownFromDurationObject(durationObject)` is now the ONLY way** to configure cooldown frames with secret values from addon code.
+
+```lua
+-- BROKEN in 12.0.1+ (throws Lua error with secret values):
+local info = C_Spell.GetSpellCooldown(spellID)
+cooldown:SetCooldown(info.startTime, info.duration)  -- ERROR: secret values
+
+-- CORRECT in 12.0.1+:
+local duration = C_Spell.GetSpellCooldownDuration(spellID)
+cooldown:SetCooldownFromDurationObject(duration)
+```
+
+**`ActionButton_ApplyCooldown` Secure Delegate Removed:**
+
+`ActionButton_ApplyCooldown` no longer routes through a secure delegate. Existing code passing secrets into this function will throw Lua errors. All logic this function performed is replicable using the new `isActive`/`shouldReplaceNormalCooldown` boolean fields and duration objects.
+
+**New Non-Secret Fields on Cooldown APIs:**
+
+Action/Spell cooldown APIs (e.g., `C_Spell.GetSpellCooldown`, `C_ActionBar.GetActionCooldown`) now return additional non-secret fields:
+
+| Field | Secret? | Description |
+|-------|---------|-------------|
+| `isEnabled` | **No** (was secret) | Whether the cooldown is enabled |
+| `maxCharges` | **No** (was secret) | Maximum charges for the ability |
+| `isActive` | **No** (new) | Whether the UI should render a cooldown display |
+
+**`isActive` logic by cooldown type:**
+- **Regular cooldowns:** `true` if `isEnabled` and `startTime > 0` and `duration > 0`
+- **Charge cooldowns:** `true` if `maxCharges > 1` and `currentCharges < maxCharges` and `startTime > 0` and `duration > 0`
+- **LoC cooldowns:** `true` if `startTime > 0` and `duration > 0`
+
+When `isActive` is `false`, duration-object-returning APIs return a **zero-span duration object**.
+
+**Cooldown Aura Spells Baked Into API Results:**
+
+Action/Spell cooldown APIs now return results **modified by cooldown aura spells** on the player. For example, if a PvP trinket has a passive that removes a loss of control effect with a 1-minute cooldown, `GetActionCooldown` will track that cooldown automatically. Addons no longer need to use `C_UnitAuras.GetCooldownAuraBySpellID()`.
+
+**Loss of Control Cooldown API Changes:**
+
+LoC cooldown APIs have been **renamed with an "Info" suffix** (e.g., `GetSpellLossOfControlCooldownInfo`). A deprecation wrapper exists for the old name. The new APIs return a **structured table** instead of unpacked values:
+
+| Field | Secret? | Description |
+|-------|---------|-------------|
+| `startTime` | Yes | Start time of the LoC cooldown |
+| `duration` | Yes | Duration of the LoC cooldown |
+| `isActive` | No | Whether the UI should render LoC cooldown |
+| `modRate` | Yes | Rate modifier |
+| `shouldReplaceNormalCooldown` | No | `true` if LoC expiration is later than regular cooldown |
+
+**New APIs:**
+
+| API | Returns | Description |
+|-----|---------|-------------|
+| `C_LossOfControl.GetActiveLossOfControlDuration(unitToken, index)` | Duration object | LoC duration for cooldown display |
+| `GetTotemDuration(slot)` | Duration object | Totem duration for cooldown display |
+
+**`UnitCreatureID` Returns Nil for Secret Identity:**
+
+`UnitCreatureID()` now returns `nil` when the unit's identity is secret, rather than returning a secret value.
+
+**Script Object Methods Return Nil with Secret Aspects:**
+
+The following methods now return `nil` if the relevant aspect involves a secret value:
+- `Frame:GetEffectiveAlpha()`
+- `StatusBar:IsStatusBarDesaturated()`
+- `Texture:IsDesaturated()`
+
+**`format()` Precision Specifiers Restricted with Secrets:**
+
+`string.format` precision specifiers (e.g., `"%.1s"`) are now restricted with secret string inputs. This was originally planned for 12.0.5 but brought forward to 12.0.1:
+
+```lua
+-- BROKEN in 12.0.1+:
+format("%.1s", secretStringValue)  -- Error: cannot truncate secret
+
+-- Still works:
+format("%s", secretStringValue)  -- Full string substitution OK (handled at C++ level by SetFormattedText)
+```
+
+**Private Aura APIs Now Combat-Restricted:**
+
+The following `C_UnitAuras` APIs can **no longer be called while the player is in combat**:
+- `C_UnitAuras.AddPrivateAuraAnchor()`
+- `C_UnitAuras.RemovePrivateAuraAnchor()`
+- `C_UnitAuras.SetPrivateWarningTextAnchor()`
+- `C_UnitAuras.AddPrivateAuraAppliedSound()`
+- `C_UnitAuras.RemovePrivateAuraAppliedSound()`
+
+Set up private aura anchors during `PLAYER_ENTERING_WORLD` or `ADDON_LOADED`, not dynamically during combat.
+
+**Macro Restrictions:**
+- `/wm` and `/cwm` (whisper macros) rate-limited to **3 per second**
+- Macros can **no longer send BNet whispers while an encounter is active**
 
 ---
 
@@ -2302,10 +2410,12 @@ local spellInfo = C_Spell.GetSpellInfo(spellID)
 
 local cooldownInfo = C_Spell.GetSpellCooldown(spellID)
 -- cooldownInfo = {
---   startTime = 123456.789,
---   duration = 30,
---   isEnabled = true,
---   modRate = 1.0
+--   startTime = 123456.789,    -- (secret during combat)
+--   duration = 30,             -- (secret during combat)
+--   isEnabled = true,          -- (non-secret as of 12.0.1)
+--   modRate = 1.0,             -- (secret during combat)
+--   isActive = true,           -- (non-secret, new in 12.0.1) whether UI should show cooldown
+--   maxCharges = 2,            -- (non-secret as of 12.0.1) if applicable
 -- }
 ```
 

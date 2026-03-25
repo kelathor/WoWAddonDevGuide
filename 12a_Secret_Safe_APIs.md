@@ -51,6 +51,7 @@ Engine APIs that accept secret values include:
 - `StatusBar:SetValue()` / `SetMinMaxValues()` -- display secret numbers
 - `StatusBar:SetTimerDuration()` -- animate with secret duration objects
 - `CooldownFrame:SetCooldownFromDurationObject()` -- cooldown display
+  - *(12.0.1: This is now the ONLY `CooldownFrame` method that accepts secret values. `SetCooldown`, `SetCooldownFromExpirationTime`, `SetCooldownDuration`, and `SetCooldownUNIX` are restricted.)*
 - `Frame:SetAlphaFromBoolean()` -- conditional visibility
 
 The **WRONG** approach is to use `issecretvalue()` to check and then provide a fallback value for display. Only use `issecretvalue()` as a guard when you **MUST** perform Lua operations (arithmetic, comparison, string ops, table indexing) on the value. If the value is just being displayed by an engine widget, pass it through untouched.
@@ -770,6 +771,26 @@ ALL meaningful data from C_DamageMeter is SECRET:
 | `classFilename` | Accessible (useless without above) |
 | `isLocalPlayer` | Accessible (useless without above) |
 
+##### APIs Now Returning Nil Instead of Secrets (12.0.1)
+
+Some APIs now return `nil` rather than secret values when the underlying data is secret:
+
+| API | Behavior Change |
+|-----|----------------|
+| `UnitCreatureID(unit)` | Returns `nil` when unit identity is secret (previously returned a secret value) |
+| `Frame:GetEffectiveAlpha()` | Returns `nil` if alpha involves secret aspects |
+| `StatusBar:IsStatusBarDesaturated()` | Returns `nil` if desaturation involves secret aspects |
+| `Texture:IsDesaturated()` | Returns `nil` if desaturation involves secret aspects |
+
+Handle these by checking for `nil` returns:
+
+```lua
+local creatureID = UnitCreatureID(unit)
+if creatureID then  -- nil when secret, number when accessible
+    -- use creatureID
+end
+```
+
 ### Tooltip Data
 
 `C_TooltipInfo` may return secret data for certain tooltip lines:
@@ -920,6 +941,21 @@ fontString:SetFormattedText("Interrupted by %s", secretName)  -- Displays: Inter
 ```
 
 **Note:** This only works when the entire FontString can be one color. For mixed-color display (e.g., white "Interrupted" + class-colored name), use the Two-FontString Inline Pattern (see Common Patterns below).
+
+##### `string.format` Precision Specifiers Restricted (12.0.1)
+
+As of 12.0.1, `string.format` precision specifiers (e.g., `"%.1s"`, `"%.3s"`) are restricted with secret string inputs. This prevents addons from extracting partial secret string content character-by-character:
+
+```lua
+-- BROKEN in 12.0.1+:
+local firstChar = format("%.1s", secretString)  -- Error
+
+-- Still works (full string, no truncation):
+format("%s", secretString)  -- OK (but result is still secret)
+
+-- For display, use SetFormattedText which handles secrets at C++ level:
+fontString:SetFormattedText("%s", secretValue)  -- OK
+```
 
 ### SetAlpha on Frames
 
@@ -1161,6 +1197,22 @@ duration:GetRemainingDuration()  -- Time remaining
 duration:IsZero()                -- Boolean: is cooldown ready?
 ```
 
+### C_LossOfControl.GetActiveLossOfControlDuration() (NEW in 12.0.1)
+
+Returns a secret-safe duration object for loss-of-control cooldown display:
+```lua
+local duration = C_LossOfControl.GetActiveLossOfControlDuration(unitToken, index)
+cooldown:SetCooldownFromDurationObject(duration)
+```
+
+### GetTotemDuration() (NEW in 12.0.1)
+
+Returns a secret-safe duration object for totem cooldown display:
+```lua
+local duration = GetTotemDuration(slot)
+cooldown:SetCooldownFromDurationObject(duration)
+```
+
 ### SetCooldownFromDurationObject and SetUseAuraDisplayTime
 
 **IMPORTANT:** Do NOT call `SetUseAuraDisplayTime(true)` when using `SetCooldownFromDurationObject()`. `SetCooldownFromDurationObject` already handles aura-style display timing internally. Combining both causes the countdown text to display **1 second LESS** than expected (e.g., showing "4" when there are 5 seconds remaining).
@@ -1171,22 +1223,28 @@ duration:IsZero()                -- Boolean: is cooldown ready?
 | `SetCooldown(start, duration)` for **auras** | **YES** -- Set to `true` | Adjusts floor-to-ceil rounding so "5s" shows as "5" not "4" |
 | `SetCooldown(start, duration)` for **cooldowns** | **NO** -- Do NOT set it | Floor rounding is correct for ability cooldowns |
 
+> **12.0.1 Restriction:** `SetCooldown(start, duration)` is now restricted from tainted addon code with secret values. For aura cooldowns, use `SetCooldownFromDurationObject` with `C_UnitAuras.GetAuraDuration()`. For spell/action cooldowns, use `SetCooldownFromDurationObject` with `C_Spell.GetSpellCooldownDuration()`.
+
 ```lua
 -- CORRECT: Aura cooldown with duration object (Platynator pattern)
 local duration = C_UnitAuras.GetAuraDuration(unit, auraInstanceID)
 cooldown:SetCooldownFromDurationObject(duration)
 -- Do NOT call cooldown:SetUseAuraDisplayTime(true) here!
 
--- CORRECT: Aura cooldown with SetCooldown (Blizzard nameplate pattern)
+-- RESTRICTED in 12.0.1: SetCooldown with secret values (Blizzard nameplate pattern)
+-- This previously worked but is now blocked for tainted addon code with secrets.
+-- Use SetCooldownFromDurationObject instead.
 local expirationTime = auraData.expirationTime
 local auraDuration = auraData.duration
 cooldown:SetUseAuraDisplayTime(true)
-cooldown:SetCooldown(expirationTime - auraDuration, auraDuration)
+cooldown:SetCooldown(expirationTime - auraDuration, auraDuration)  -- RESTRICTED in 12.0.1
 
 -- WRONG: Combining both (countdown shows 1 second less than expected)
 cooldown:SetUseAuraDisplayTime(true)  -- Don't do this with duration objects!
 cooldown:SetCooldownFromDurationObject(duration)
 ```
+
+**Cooldown API Non-Secret Fields (12.0.1):** `isEnabled`, `maxCharges`, and the new `isActive` boolean are all non-secret. Use `isActive` to determine whether a cooldown display should be rendered, without needing to check secret `startTime`/`duration` values.
 
 ---
 
@@ -1718,6 +1776,17 @@ if issecretvalue(k) or issecretvalue(v) then
 end
 ```
 
+##### Private Aura APIs -- Combat-Restricted (12.0.1)
+
+The following `C_UnitAuras` APIs can no longer be called during combat:
+- `AddPrivateAuraAnchor()`
+- `RemovePrivateAuraAnchor()`
+- `SetPrivateWarningTextAnchor()`
+- `AddPrivateAuraAppliedSound()`
+- `RemovePrivateAuraAppliedSound()`
+
+Set up all private aura anchors during initialization (`ADDON_LOADED` / `PLAYER_ENTERING_WORLD`), not dynamically during combat.
+
 ---
 
 ## Migration Checklist
@@ -1737,6 +1806,13 @@ end
 11. [ ] Test with `secretCombatRestrictionsForced` CVar enabled
 12. [ ] Test in actual combat scenarios (including open world, not just instances)
 13. [ ] Add version checks for `issecretvalue` existence
+14. [ ] Replace `SetCooldown`/`SetCooldownFromExpirationTime`/`SetCooldownDuration`/`SetCooldownUNIX` with `SetCooldownFromDurationObject` for secret values
+15. [ ] Replace `ActionButton_ApplyCooldown` usage with `isActive`/`shouldReplaceNormalCooldown` fields + duration objects
+16. [ ] Update LoC cooldown code to use new "Info" suffix APIs (e.g., `GetSpellLossOfControlCooldownInfo`)
+17. [ ] Check for `format("%.Ns", secret)` precision specifier usage
+18. [ ] Update code reading `UnitCreatureID` to handle `nil` returns
+19. [ ] Move private aura API calls (`AddPrivateAuraAnchor`, etc.) out of combat paths
+20. [ ] Check for `GetEffectiveAlpha()`, `IsStatusBarDesaturated()`, `IsDesaturated()` nil returns
 
 ### For New Addons
 
@@ -1807,6 +1883,7 @@ end
 
 ---
 
-*Last Updated: 2026-02-05*
-*WoW Version: 12.0.0 (Midnight)*
+*Last Updated: 2026-03-25*
+*WoW Version: 12.0.0 / 12.0.1 (Midnight)*
 *Added: Comprehensive aura data secret values documentation (all fields secret except auraInstanceID), C_Spell.GetSpellInfo spell-name-lookup removal, pre-combat caching limitations, practical implications table for aura addon developers*
+*12.0.1 Updates: SetCooldown restricted (use SetCooldownFromDurationObject only), format precision specifiers restricted, UnitCreatureID/GetEffectiveAlpha/IsDesaturated return nil, new duration APIs (LoC, Totem), isActive/isEnabled/maxCharges non-secret, private aura APIs combat-restricted*

@@ -110,6 +110,7 @@ When reviewing addons with multiple files:
 - **Secret values beyond combat**: Secrets appear in ANY tainted execution context, not just `InCombatLockdown()`. Always use `issecretvalue()` checks.
 - **C++ event taint attribution (12.0.0+)**: State-changing C++ API calls from addon code inherently produce tainted events. Neither `securecallfunction` nor `C_Timer.After(0)` prevents this. Options: avoid the calls, accept the taint, or provide a user toggle.
 - **Quest reward data**: `HaveQuestData()` does NOT guarantee rewards are loaded. `GetNumQuestLogRewards()` can transiently return 0. Cache known-good data and use `RequestLoadQuestByID()`.
+- **Cooldown frames (12.0.1+):** `SetCooldown`/`SetCooldownFromExpirationTime`/`SetCooldownDuration`/`SetCooldownUNIX` restricted from tainted code with secrets — use `SetCooldownFromDurationObject` exclusively. `ActionButton_ApplyCooldown` secure delegate removed.
 - **Debug Output**: NEVER output debug info to chat frames. ALWAYS create a scrollable, copy-pasteable window (EditBox with multi-line support) so users can easily select and copy debug output for reporting issues
 - **When researching**: Check Blizzard UI Source (see User Configuration at top of file) for official implementation examples
 

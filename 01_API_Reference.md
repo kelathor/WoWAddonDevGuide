@@ -81,7 +81,7 @@ UnitIsDead("unit")                  -- Check if unit is dead
 UnitAffectingCombat("unit")         -- Check if in combat
 UnitIsLieutenant("unit")            -- Check if unit is a lieutenant (12.0.0)
 UnitIsMinion("unit")                -- Check if unit is a minion (12.0.0)
-UnitCreatureID("unit")              -- Get creature ID directly (12.0.0)
+UnitCreatureID("unit")              -- Get creature ID (returns nil when identity is secret, 12.0.1+)
 UnitBuff("unit", index or "name")   -- DEPRECATED 10.2.5; use C_UnitAuras
 UnitDebuff("unit", index or "name") -- DEPRECATED 10.2.5; use C_UnitAuras
 -- NOTE: In 12.0.0+, ALL aura data fields are SECRET during combat except auraInstanceID.
@@ -199,7 +199,7 @@ PickupContainerItem(bagID, slotIndex)
 ```lua
 C_Spell.GetSpellInfo(spellID)        -- ONLY accepts numeric spell IDs (not names) in 12.0.0+
 C_Spell.IsSpellInRange(spellID, "unit")
-C_Spell.GetSpellCooldown(spellID)
+C_Spell.GetSpellCooldown(spellID)   -- Returns cooldownInfo table (isActive, isEnabled, maxCharges now non-secret in 12.0.1)
 C_Spell.DoesSpellExist(spellID)
 
 -- New in 12.0.0
@@ -384,7 +384,7 @@ Replaces global action bar functions with a structured namespace.
 C_ActionBar.GetActionInfo(slot)
 C_ActionBar.GetActionTexture(slot)
 C_ActionBar.GetActionText(slot)
-C_ActionBar.GetActionCooldown(slot)
+C_ActionBar.GetActionCooldown(slot)  -- Returns cooldownInfo (isActive, isEnabled, maxCharges non-secret in 12.0.1; includes cooldown aura effects)
 
 -- Action bar operations
 C_ActionBar.HasAction(slot)
@@ -667,6 +667,34 @@ print("Debug: " .. safeInfo.targetHealth)  -- Will show "[SECRET]" if protected
 2. **Use string.concat()**: For string building with potentially secret values
 3. **Scrub for display**: Use `scrubsecretvalues()` before displaying debug information
 4. **Don't fight the system**: If a value is secret, it's intentionally protected
+
+#### 12.0.1 Hotfix Changes
+
+**Cooldown frame methods restricted with secret values:**
+- `SetCooldown()`, `SetCooldownFromExpirationTime()`, `SetCooldownDuration()`, `SetCooldownUNIX()` — restricted
+- `SetCooldownFromDurationObject()` — the ONLY method that still accepts secret values
+
+**APIs now returning nil instead of secrets:**
+- `UnitCreatureID(unit)` — returns `nil` when unit identity is secret
+- `Frame:GetEffectiveAlpha()` — returns `nil` with secret aspects
+- `StatusBar:IsStatusBarDesaturated()` — returns `nil` with secret aspects
+- `Texture:IsDesaturated()` — returns `nil` with secret aspects
+
+**Cooldown API fields now non-secret:**
+- `isEnabled`, `maxCharges` — previously secret, now always accessible
+- `isActive` (new) — non-secret boolean indicating whether UI should render a cooldown
+
+**New APIs:**
+- `C_LossOfControl.GetActiveLossOfControlDuration(unitToken, index)` — returns duration object
+- `GetTotemDuration(slot)` — returns duration object
+
+**Private aura APIs now combat-restricted:**
+- `C_UnitAuras.AddPrivateAuraAnchor()`, `RemovePrivateAuraAnchor()`, `SetPrivateWarningTextAnchor()`, `AddPrivateAuraAppliedSound()`, `RemovePrivateAuraAppliedSound()`
+
+**Other restrictions:**
+- `string.format` precision specifiers (`"%.1s"`) restricted with secret strings
+- `ActionButton_ApplyCooldown` secure delegate removed (throws errors with secrets)
+- Cooldown aura spells baked into API results (obsoletes `C_UnitAuras.GetCooldownAuraBySpellID`)
 
 ---
 
