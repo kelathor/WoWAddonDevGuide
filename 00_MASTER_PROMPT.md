@@ -297,10 +297,12 @@ end
 
 **Combat Data Access (12.0+):**
 ```lua
--- NOTE: C_DamageMeter API data is SECRET-protected and unusable by addons!
--- Third-party damage meters CANNOT function in 12.0.0
--- Players must use Blizzard's built-in damage meter (Shift+P)
--- See 12_API_Migration_Guide.md for details
+-- C_DamageMeter API data is SECRET-protected during combat, but workarounds exist:
+-- pcall(string.format, "%.0f", secretValue) extracts secret numbers as displayable text
+-- StatusBar:SetValue(secretValue) accepts secrets at C++ level for bar display
+-- Array index from combatSources preserves sort order (index 1 = highest)
+-- After PLAYER_REGEN_ENABLED + delay, all values become fully readable
+-- See 12a_Secret_Safe_APIs.md and 12_API_Migration_Guide.md for details
 ```
 
 ## File Organization Best Practices

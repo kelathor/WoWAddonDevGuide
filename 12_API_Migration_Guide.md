@@ -956,10 +956,11 @@ RegisterEventCallback("COMBAT_LOG_EVENT_UNFILTERED", ...)  -- BLOCKED!
 3. **Non-combat events** - Other events still work normally
 
 **Migration Path for Damage Meters:**
-Traditional damage meters that parse `COMBAT_LOG_EVENT_UNFILTERED` **cannot function in 12.0.0**. You have two options:
+Traditional damage meters that parse `COMBAT_LOG_EVENT_UNFILTERED` must migrate to the C_DamageMeter API in 12.0.0. While the data is secret-protected during combat, there ARE viable workarounds:
 
-1. **Use C_DamageMeter API** (recommended) - Provides aggregated damage/healing data through official channels
-2. **Discontinue combat log parsing** - Accept that raw combat log access is no longer available to addons
+1. **Use C_DamageMeter API** (recommended) - Provides aggregated damage/healing data; secret values can be displayed using `pcall(string.format)` and StatusBar C++ methods
+2. **Post-combat re-parse** - After combat ends (+0.5s delay), secret values become fully readable for clean final data
+3. **Conditional dual-parser** - Check `C_DamageMeter ~= nil` at load time; use C_DamageMeter on 12.0+, legacy CLEU on older clients
 
 **Why Blizzard Made This Change:**
 > "When addons could analyze combat information in real-time, they could process combat information to make decisions for players, meaning players no longer need to make these decisions themselves."
@@ -970,84 +971,138 @@ This is part of Blizzard's effort to prevent addons from "solving" encounter mec
 - [Combat Addon Restrictions Eased in Midnight - Icy Veins](https://www.icy-veins.com/wow/news/combat-addon-restrictions-eased-in-midnight/)
 - [Patch 12.0.0/Planned API changes - Warcraft Wiki](https://warcraft.wiki.gg/wiki/Patch_12.0.0/Planned_API_changes)
 
-#### C_DamageMeter Namespace - ⛔ SECRET-PROTECTED (UNUSABLE BY ADDONS)
+#### C_DamageMeter Namespace - SECRET-PROTECTED (USABLE WITH WORKAROUNDS)
 
-> **⚠️ CRITICAL DISCOVERY (Verified January 2026):**
-> While C_DamageMeter API exists and appears functional, **the actual data returned is protected as "secret values"** and cannot be used by third-party addons. This API appears to be designed ONLY for Blizzard's built-in damage meter UI.
+> **Updated March 2026:** C_DamageMeter data IS secret-protected during combat, but
+> third-party addons CAN work with it using specific techniques. Recount has demonstrated
+> a successful 12.0.1 update using these workarounds.
 >
 > For details on secret values, see [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md).
 
-**What Happens When You Try to Use It:**
-```lua
--- The API returns data, but key values are SECRET:
-local sessionData = C_DamageMeter.GetCombatSessionFromType(sessionType, meterType)
-for _, source in ipairs(sessionData.combatSources) do
-    -- These are ACCESSIBLE (cosmetic only):
-    print(source.classFilename)  -- Works: "DEATHKNIGHT"
-    print(source.isLocalPlayer)  -- Works: true
-    print(source.specIconID)     -- Works: 135770
+**Field Accessibility:**
+| Field | Status | Workaround |
+|-------|--------|------------|
+| `name` | 🔒 SECRET during combat | Use `isLocalPlayer` for self; cross-reference class+role against party roster for others; GUID-based proxy names as fallback |
+| `totalAmount` | 🔒 SECRET during combat | Display via `pcall(string.format, "%.0f", source.totalAmount)`; pass directly to `StatusBar:SetValue()` |
+| `amountPerSecond` | 🔒 SECRET during combat | Same `pcall(string.format)` technique; pass directly to StatusBar |
+| `sourceGUID` | 🔒 SECRET during combat | Cross-reference accessible fields against group roster |
+| `classFilename` | ✅ Accessible | Always readable |
+| `isLocalPlayer` | ✅ Accessible | Always readable |
+| `specIconID` | ✅ Accessible | Always readable |
 
-    -- These are SECRET (unusable):
-    print(source.name)           -- ERROR: "attempt to compare (a secret value)"
-    print(source.totalAmount)    -- SECRET - no value accessible
-    print(source.amountPerSecond)-- SECRET - no value accessible
-    print(source.sourceGUID)     -- SECRET - no value accessible
+**Key Workarounds for Secret Values:**
+
+1. **Display secret numbers as text** -- `string.format` at the C++ level can process secret numbers:
+```lua
+local ok, text = pcall(string.format, "%.0f", source.totalAmount)
+if ok then
+    myFontString:SetText(text)  -- Displays the actual number
 end
 ```
 
-**Error You'll See:**
-```
-attempt to compare local 'name' (a secret value)
-```
-
-**The Reality:**
-| Field | Status | Notes |
-|-------|--------|-------|
-| `name` | 🔒 SECRET | Player names hidden |
-| `totalAmount` | 🔒 SECRET | Damage/healing totals hidden |
-| `amountPerSecond` | 🔒 SECRET | DPS/HPS hidden |
-| `sourceGUID` | 🔒 SECRET | Player GUIDs hidden |
-| `classFilename` | ✅ Accessible | Cosmetic only |
-| `isLocalPlayer` | ✅ Accessible | Cosmetic only |
-| `specIconID` | ✅ Accessible | Cosmetic only |
-
-**Bottom Line:**
-- **Third-party damage meters CANNOT function in WoW 12.0.0+**
-- Combat log is blocked AND C_DamageMeter data is secret-protected
-- Players must use Blizzard's built-in damage meter (Shift+P or Encounter Journal)
-- This is intentional as part of Blizzard's "addon disarmament" initiative
-
-**API Reference (for documentation purposes only):**
+2. **StatusBar accepts secrets at C++ level** -- bar proportions render correctly:
 ```lua
--- Check availability (this works, returns true, but data is still secret!)
+pcall(myBar.SetMinMaxValues, myBar, 0, sessionData.maxAmount)
+pcall(myBar.SetValue, myBar, source.totalAmount)
+```
+
+3. **Sort order via array index** -- `combatSources` is returned sorted highest-first:
+```lua
+local sessionData = C_DamageMeter.GetCombatSessionFromType(sessionType, meterType)
+for i, source in ipairs(sessionData.combatSources) do
+    -- Index 1 = top DPS. Use (1000 - i) as synthetic sort value
+    source._sortValue = 1000 - i
+end
+```
+
+4. **Name resolution** -- Identify players without accessing secret `name`:
+```lua
+if source.isLocalPlayer then
+    displayName = UnitName("player")
+else
+    -- Cross-reference classFilename + role against party roster
+    for j = 1, GetNumGroupMembers() do
+        local unit = "party" .. j
+        local _, class = UnitClass(unit)
+        if class == source.classFilename then
+            displayName = UnitName(unit)
+            break
+        end
+    end
+    displayName = displayName or ("Player " .. i)  -- Fallback proxy name
+end
+```
+
+5. **Post-combat re-parse** -- After combat ends, secrets become readable:
+```lua
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+frame:SetScript("OnEvent", function()
+    C_Timer.After(0.5, function()
+        -- Secret values are now fully readable
+        -- Do a final full parse for clean data including spell breakdowns
+        ReparseAllSessions()
+    end)
+end)
+```
+
+6. **Overall baseline subtraction** -- Isolate per-fight data from cumulative Overall:
+```lua
+-- At combat start, snapshot Overall totals
+-- At combat end, subtract baseline from current Overall to get per-fight data
+```
+
+**Available Meter Types (Enum.DamageMeterType numeric values):**
+| Type | Value | Notes |
+|------|-------|-------|
+| DamageDone | 0 | Standard DPS meter |
+| HealingDone | 2 | Healing meter |
+| Absorbs | 4 | Absorb shields |
+| Interrupts | 5 | Interrupt count |
+| Dispels | 6 | Dispel count |
+| DamageTaken | 7 | Damage taken meter |
+| Deaths | 9 | Death tracking |
+
+**Unsupported Modes on 12.0+:**
+Some detailed modes require combat log detail that C_DamageMeter does not provide. These should be disabled on 12.0+:
+- Friendly Fire
+- Overhealing breakdown
+- DOT/HOT Uptime tracking
+- Per-ability damage taken breakdown
+
+**API Reference:**
+```lua
+-- Check availability
 C_DamageMeter.IsDamageMeterAvailable()
   -- Returns: isAvailable (bool), failureReason (string)
 
--- Get session data - DATA IS SECRET
+-- Get session data (combatSources sorted highest-first)
 C_DamageMeter.GetCombatSessionFromType(sessionType, meterType)
 C_DamageMeter.GetCombatSessionFromID(sessionID, meterType)
 
--- Get spell breakdown - DATA IS SECRET
+-- Get spell breakdown for a specific source
 C_DamageMeter.GetCombatSessionSourceFromType(sessionType, meterType, sourceGUID)
 
--- Reset (this may work)
+-- Reset all sessions
 C_DamageMeter.ResetAllCombatSessions()
 
--- Enums exist but data they access is secret:
+-- Enums:
 -- Enum.DamageMeterSessionType = { Overall, CurrentFight, LastFight }
--- Enum.DamageMeterType = { DamageDone, HealingDone, DamageTaken }
+-- Enum.DamageMeterType = { DamageDone (0), HealingDone (2), Absorbs (4),
+--                          Interrupts (5), Dispels (6), DamageTaken (7), Deaths (9) }
 
--- Events fire but contain no usable data:
+-- Events (fire during combat, useful for triggering UI updates):
 -- DAMAGE_METER_COMBAT_SESSION_UPDATED
 -- DAMAGE_METER_CURRENT_SESSION_UPDATED
 -- DAMAGE_METER_RESET
 ```
 
 **If You're Maintaining a Damage Meter Addon:**
-1. Display a message explaining the limitation to users
-2. Suggest using Blizzard's built-in meter
-3. Consider discontinuing 12.0.0+ support
-4. Monitor for potential future changes from Blizzard
+1. Use C_DamageMeter API with the secret-value workarounds described above
+2. Implement a conditional dual-parser: `C_DamageMeter ~= nil` for 12.0+, legacy CLEU for older clients
+3. Do a post-combat re-parse after `PLAYER_REGEN_ENABLED` + 0.5s for clean final data
+4. Disable unsupported detail modes (Friendly Fire, Overhealing, DOT/HOT Uptime) on 12.0+
+5. See Recount's 12.0.1 update for a working reference implementation
 
 #### C_EncounterTimeline and C_EncounterWarnings
 
@@ -3113,95 +3168,178 @@ end
 
 **Result:** Addon works on both 11.x and 12.0+, handles secret values gracefully
 
-### Example 5: Damage Meter Addon (11.x -> 12.0.0) - ⛔ NO LONGER POSSIBLE
+### Example 5: Damage Meter Addon (11.x -> 12.0.0) - REQUIRES C_DamageMeter MIGRATION
 
-> **⚠️ VERIFIED JANUARY 2026:** Third-party damage meters **CANNOT function in WoW 12.0.0+**. Both paths are blocked:
-> 1. Combat log events throw `ADDON_ACTION_FORBIDDEN`
-> 2. C_DamageMeter API data is protected as "secret values"
+> **Updated March 2026:** Third-party damage meters CAN function in 12.0.0+ by migrating
+> to C_DamageMeter. Data is secret-protected during combat but can be displayed using
+> `pcall(string.format)`, StatusBar C++ methods, and post-combat re-parsing. Recount
+> has demonstrated this approach in its 12.0.1 update.
 
-**Before (11.x - Combat Log Parsing) - BLOCKED:**
+**Before (11.x - Combat Log Parsing) - NO LONGER AVAILABLE:**
 ```lua
--- ❌ THIS CODE THROWS ADDON_ACTION_FORBIDDEN IN 12.0.0:
+-- This approach no longer works in 12.0.0:
 local damageData = {}
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")  -- ADDON_ACTION_FORBIDDEN!
+frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")  -- ADDON_ACTION_FORBIDDEN in 12.0+
 frame:SetScript("OnEvent", function()
-    -- This handler will NEVER fire - registration itself fails
+    -- Handler will not fire - registration fails
 end)
 ```
 
-**Attempted Workaround (C_DamageMeter API) - ALSO BLOCKED:**
+**After (12.0.0+ - C_DamageMeter with Secret Value Workarounds):**
 ```lua
--- ❌ THIS CODE FAILS WITH "secret value" ERRORS:
-local function TryToGetData()
-    local available = C_DamageMeter.IsDamageMeterAvailable()  -- Returns true!
+local MyMeter = {}
+MyMeter.data = {}
+MyMeter.overallBaseline = {}  -- Baseline snapshot for per-fight isolation
 
-    if available then
-        local sessionData = C_DamageMeter.GetCombatSessionFromType(
-            Enum.DamageMeterSessionType.Overall,
-            Enum.DamageMeterType.DamageDone
-        )
+-- Conditional dual-parser: use C_DamageMeter on 12.0+, legacy CLEU on older
+local USE_NEW_API = (C_DamageMeter ~= nil)
 
-        for _, source in ipairs(sessionData.combatSources) do
-            -- These work (cosmetic only):
-            print(source.classFilename)  -- "WARRIOR"
-            print(source.isLocalPlayer)  -- true
+-- ============================================================
+-- Core data retrieval with secret-value workarounds
+-- ============================================================
+function MyMeter:UpdateFromAPI(sessionType, meterType)
+    if not USE_NEW_API then return end
 
-            -- These FAIL with "attempt to compare (a secret value)":
-            if source.name == "SomePlayer" then  -- ERROR!
-                -- Cannot compare secret values
-            end
-            local damage = source.totalAmount  -- SECRET, unusable
-            local dps = source.amountPerSecond -- SECRET, unusable
+    local sessionData = C_DamageMeter.GetCombatSessionFromType(sessionType, meterType)
+    if not sessionData or not sessionData.combatSources then return end
+
+    wipe(self.data)
+
+    -- combatSources is sorted highest-first by the API
+    for i, source in ipairs(sessionData.combatSources) do
+        local entry = {}
+
+        -- Resolve name: isLocalPlayer is always accessible
+        if source.isLocalPlayer then
+            entry.name = UnitName("player")
+        else
+            -- Cross-reference class + role against group roster
+            entry.name = self:ResolveNameByClass(source.classFilename, i)
+        end
+
+        entry.classFilename = source.classFilename
+        entry.isLocalPlayer = source.isLocalPlayer
+        entry.specIconID = source.specIconID
+
+        -- Display secret numbers via pcall(string.format) at C++ level
+        local ok, text = pcall(string.format, "%.0f", source.totalAmount)
+        entry.totalText = ok and text or "?"
+
+        local ok2, dpsText = pcall(string.format, "%.1f", source.amountPerSecond)
+        entry.dpsText = ok2 and dpsText or "?"
+
+        -- Use array index as sort proxy (index 1 = top, so invert)
+        entry.sortValue = 1000 - i
+
+        -- Store raw secret values for StatusBar (C++ level accepts them)
+        entry.rawTotal = source.totalAmount
+        entry.rawPerSecond = source.amountPerSecond
+
+        self.data[i] = entry
+    end
+end
+
+function MyMeter:ResolveNameByClass(classFilename, index)
+    -- Try to match against party/raid roster
+    local numGroup = GetNumGroupMembers()
+    for j = 1, numGroup do
+        local unit = (IsInRaid() and "raid" or "party") .. j
+        local _, unitClass = UnitClass(unit)
+        if unitClass == classFilename then
+            return UnitName(unit)
+        end
+    end
+    return "Player " .. index  -- Fallback proxy name
+end
+
+-- ============================================================
+-- StatusBar rendering (C++ level accepts secret values)
+-- ============================================================
+function MyMeter:UpdateBars()
+    for i, entry in ipairs(self.data) do
+        local bar = self.bars[i]
+        if bar then
+            bar.nameText:SetText(entry.name)
+            bar.valueText:SetText(entry.totalText .. " (" .. entry.dpsText .. ")")
+
+            -- StatusBar:SetValue() and SetMinMaxValues() accept secrets at C++ level
+            pcall(bar.SetMinMaxValues, bar, 0, self.data[1] and self.data[1].rawTotal or 1)
+            pcall(bar.SetValue, bar, entry.rawTotal)
         end
     end
 end
-```
 
-**The Only Valid "Migration" - Show Users a Message:**
-```lua
--- ✅ The only thing damage meter addons can do in 12.0.0+:
-local function OnAddonLoaded(self, event, addonName)
-    if addonName == "YourDamageMeter" then
-        -- Check WoW version
-        local _, _, _, tocVersion = GetBuildInfo()
-        if tocVersion >= 120000 then
-            -- 12.0.0+ - damage meters cannot function
-            print("|cFFFF6600[YourDamageMeter]|r WoW 12.0.0 has blocked damage meter functionality.")
-            print("|cFFFF6600[YourDamageMeter]|r Please use Blizzard's built-in meter (Shift+P or Encounter Journal).")
-
-            -- Optionally disable the addon's UI
-            if YourDamageMeter.MainFrame then
-                YourDamageMeter.MainFrame:Hide()
-            end
-        end
-    end
+-- ============================================================
+-- Overall baseline subtraction for per-fight isolation
+-- ============================================================
+function MyMeter:CaptureBaseline(meterType)
+    -- Snapshot Overall totals at combat start
+    self.overallBaseline[meterType] = C_DamageMeter.GetCombatSessionFromType(
+        Enum.DamageMeterSessionType.Overall, meterType
+    )
 end
 
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", OnAddonLoaded)
+-- ============================================================
+-- Post-combat re-parse: secrets become readable after combat
+-- ============================================================
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+eventFrame:SetScript("OnEvent", function(self, event)
+    if event == "PLAYER_REGEN_DISABLED" then
+        -- Combat start: capture baseline
+        MyMeter:CaptureBaseline(Enum.DamageMeterType.DamageDone)
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        -- Post-combat: wait 0.5s then do a clean re-parse
+        C_Timer.After(0.5, function()
+            -- Secret values are now fully readable as normal numbers
+            MyMeter:UpdateFromAPI(
+                Enum.DamageMeterSessionType.LastFight,
+                Enum.DamageMeterType.DamageDone
+            )
+            MyMeter:UpdateBars()
+            -- Can now also parse spell breakdowns:
+            -- C_DamageMeter.GetCombatSessionSourceFromType(...)
+        end)
+    end
+end)
+
+-- Live updates during combat (uses secret-value workarounds)
+eventFrame:RegisterEvent("DAMAGE_METER_COMBAT_SESSION_UPDATED")
+-- (handler would call MyMeter:UpdateFromAPI / UpdateBars)
 ```
 
 **What This Means for Existing Damage Meters:**
-- **Recount, Skada, Details!** and similar addons **cannot be fixed** for 12.0.0+
-- There is NO migration path - both combat log AND C_DamageMeter are blocked
-- Players must use Blizzard's built-in damage meter
-- Addon authors should display clear messages explaining this to users
+- Damage meter addons CAN be updated for 12.0.0+ using C_DamageMeter with secret-value workarounds
+- Recount has demonstrated a working 12.0.1 update using these techniques
+- During combat: use `pcall(string.format)` to display numbers, StatusBar C++ methods for bars, array index for sort order
+- After combat: do a full re-parse when secrets become readable for clean final data
+- Some detailed modes (Friendly Fire, Overhealing, DOT/HOT Uptime) cannot be supported without combat log access and should be disabled on 12.0+
 
-**Why C_DamageMeter Doesn't Work (Verified):**
+**Available C_DamageMeter Types:**
 
-| Field | Status | What You Get |
-|-------|--------|--------------|
-| `name` | 🔒 SECRET | `<no value>` - comparison throws error |
-| `totalAmount` | 🔒 SECRET | `<no value>` - unusable |
-| `amountPerSecond` | 🔒 SECRET | `<no value>` - unusable |
-| `sourceGUID` | 🔒 SECRET | `<no value>` - unusable |
-| `classFilename` | ✅ Accessible | Works, but useless without names/amounts |
-| `isLocalPlayer` | ✅ Accessible | Works, but useless without damage data |
+| Type | Enum Value | Notes |
+|------|------------|-------|
+| DamageDone | 0 | Standard DPS meter |
+| HealingDone | 2 | Healing meter |
+| Absorbs | 4 | Absorb shields |
+| Interrupts | 5 | Interrupt count |
+| Dispels | 6 | Dispel count |
+| DamageTaken | 7 | Damage taken meter |
+| Deaths | 9 | Death tracking |
 
-**Blizzard's Intent:**
-This is intentional. C_DamageMeter exists for Blizzard's OWN built-in UI, not for third-party addons. The "addon disarmament" in 12.0.0 was designed to prevent third-party combat analysis addons from functioning.
+**Key Techniques Summary:**
+
+| Challenge | Solution |
+|-----------|----------|
+| Display secret numbers | `pcall(string.format, "%.0f", secretValue)` |
+| Render bar proportions | `StatusBar:SetValue()` accepts secrets at C++ level |
+| Sort players by output | `combatSources` array is pre-sorted highest-first; use index |
+| Identify players | `isLocalPlayer` for self; class+role cross-reference for others |
+| Get clean final data | Post-combat re-parse after `PLAYER_REGEN_ENABLED` + 0.5s |
+| Per-fight isolation | Capture Overall baseline at combat start, subtract at end |
+| Support older clients | Check `C_DamageMeter ~= nil`; fall back to legacy CLEU parser |
 
 ---
 

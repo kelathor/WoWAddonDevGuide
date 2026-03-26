@@ -700,61 +700,56 @@ ignore:
 
 The 12.0.0 (Midnight) expansion introduces significant API changes that affect most addon categories. This section documents the impact and migration strategies for each major category.
 
-### Damage Meters (Details, Skada, Recount) - ⛔ CANNOT FUNCTION IN 12.0.0+
+### Damage Meters (Details, Skada, Recount) - FUNCTIONAL WITH WORKAROUNDS IN 12.0.0+
 
-> **⚠️ CRITICAL (Verified January 2026):** Third-party damage meters **CANNOT function in WoW 12.0.0+**. Both paths are blocked:
-> 1. `COMBAT_LOG_EVENT_UNFILTERED` registration throws `ADDON_ACTION_FORBIDDEN`
-> 2. `C_DamageMeter` API data is protected as "secret values" - unusable by addons
+> **Updated March 2026:** While combat log parsing is blocked and C_DamageMeter data is secret-protected during combat, **proven workarounds exist** that allow third-party damage meters to function. Recount has demonstrated a successful 12.0.1 update using these techniques.
 
 **12.0 Changes:**
 - **Combat log events BLOCKED** - `RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")` throws `ADDON_ACTION_FORBIDDEN`
-- **C_DamageMeter data is SECRET** - Key values (`name`, `totalAmount`, `amountPerSecond`) are hidden
-- **NO migration path exists** - Third-party damage meters are intentionally disabled
+- **C_DamageMeter data is SECRET during combat** - Key values (`name`, `totalAmount`, `amountPerSecond`) are secret values
+- **Workarounds exist** - Secret values can be extracted for display and become fully readable after combat
 
-**What Damage Meter Addons Should Do:**
+**Migration Strategy for Damage Meter Addons:**
 ```lua
--- The ONLY valid response in 12.0.0+ is to inform users
-local function OnAddonLoaded(self, event, addonName)
-    if addonName == "YourDamageMeter" then
-        local _, _, _, tocVersion = GetBuildInfo()
-        if tocVersion >= 120000 then
-            -- Display warning to users
-            print("|cFFFF6600[YourDamageMeter]|r WoW 12.0.0 has disabled third-party damage meters.")
-            print("|cFFFF6600[YourDamageMeter]|r Please use Blizzard's built-in meter (Shift+P or Encounter Journal).")
-
-            -- Hide addon UI
-            if YourMeterFrame then
-                YourMeterFrame:Hide()
-            end
-        end
-    end
-end
-
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", OnAddonLoaded)
-```
-
-**Why C_DamageMeter Doesn't Work (Verified):**
-```lua
--- The API exists and IsDamageMeterAvailable() returns true, BUT:
+-- Use C_DamageMeter API with secret-value workarounds
 local sessionData = C_DamageMeter.GetCombatSessionFromType(sessionType, meterType)
-for _, source in ipairs(sessionData.combatSources) do
-    -- These are SECRET (throw errors when accessed):
-    print(source.name)            -- ERROR: "attempt to compare (a secret value)"
-    print(source.totalAmount)     -- <no value> - SECRET
-    print(source.amountPerSecond) -- <no value> - SECRET
+for i, source in ipairs(sessionData.combatSources) do
+    -- WORKAROUND 1: pcall(string.format) extracts secret values as text at C++ level
+    local ok, dpsText = pcall(string.format, "%.0f", source.amountPerSecond)
+    if ok then
+        myFontString:SetText(dpsText .. " DPS")
+    end
 
-    -- Only cosmetic data works (useless without names/amounts):
-    print(source.classFilename)   -- Works: "DEATHKNIGHT"
-    print(source.isLocalPlayer)   -- Works: true
+    -- WORKAROUND 2: StatusBar accepts secret values at C++ level
+    pcall(myBar.SetMinMaxValues, myBar, 0, sessionData.maxAmount)
+    pcall(myBar.SetValue, myBar, source.totalAmount)
+
+    -- WORKAROUND 3: Array index = sort order (i=1 is highest)
+    local syntheticRank = 1000 - i
+
+    -- Always accessible (not secret):
+    local class = source.classFilename   -- "DEATHKNIGHT"
+    local isMe = source.isLocalPlayer    -- true/false
 end
+
+-- WORKAROUND 4: Post-combat, all values become fully readable
+local reparseFrame = CreateFrame("Frame")
+reparseFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+reparseFrame:SetScript("OnEvent", function()
+    C_Timer.After(0.5, function()
+        -- Full arithmetic, comparisons, string ops now work
+        ReparseAllSessions()
+    end)
+end)
 ```
 
-**Bottom Line:**
-- Details!, Skada, Recount, and all similar addons **cannot be fixed** for 12.0.0+
-- Players must use Blizzard's built-in damage meter
-- Addon authors should display clear warning messages and consider EOL for 12.0.0+
+**Key Techniques:**
+- `pcall(string.format, "%.0f", secretValue)` -- formats secret numbers into normal displayable strings
+- `StatusBar:SetValue(secretValue)` / `SetMinMaxValues()` -- proportional bar display with secrets
+- Array index from `combatSources` preserves sort order (index 1 = highest)
+- `isLocalPlayer` and `classFilename` are always accessible for UI styling
+- After `PLAYER_REGEN_ENABLED` + delay, all values become non-secret for post-combat analysis
+- See `12a_Secret_Safe_APIs.md` for complete documentation of workaround patterns
 
 ### Boss Mods (DBM, BigWigs, LittleWigs)
 

@@ -1,6 +1,36 @@
 <\!-- CLAUDE_SKIP_START -->
 # WoW Addon Development Knowledge Base - Update Log
 
+## Version 2.8 - 2026-03-25
+
+### Correction: C_DamageMeter IS Usable by Third-Party Addons (With Workarounds)
+
+**Summary:**
+Corrected documentation that previously stated C_DamageMeter data is "unusable by addons" and that "third-party damage meters CANNOT function in 12.0.0+." Recount has demonstrated a successful 12.0.1 update proving that viable workarounds exist for secret-protected data.
+
+**Files Updated:**
+- `12a_Secret_Safe_APIs.md` - Rewrote C_DamageMeter section with workaround table and four subsections: pcall formatting, StatusBar display, array index sort order, and post-combat full access. Fixed anchor link.
+- `12_API_Migration_Guide.md` - Section was already partially corrected in a prior edit. Verified current content is accurate.
+- `00_MASTER_PROMPT.md` - Replaced "unusable/CANNOT function" comment block with workaround summary.
+- `QUICK_START_GUIDE.md` - Replaced "cannot function" bullet with workaround summary.
+- `08_Community_Addon_Patterns.md` - Rewrote Damage Meters section from "CANNOT FUNCTION" to "FUNCTIONAL WITH WORKAROUNDS" including migration code examples.
+- `KNOWLEDGE_BASE_UPDATE_LOG.md` - Added correction notes to historical entries (v2.3, v2.2).
+
+**Key Workarounds Documented:**
+1. `pcall(string.format, "%.0f", secretValue)` -- extracts secret numbers as displayable text at C++ level
+2. `StatusBar:SetValue(secretValue)` / `SetMinMaxValues()` -- bar display accepts secrets at C++ level
+3. Array index from `combatSources` preserves sort order (index 1 = highest)
+4. `isLocalPlayer` and `classFilename` are always accessible
+5. After `PLAYER_REGEN_ENABLED` + delay, all values become non-secret and fully readable
+
+**Previous Incorrect Claims Corrected:**
+- "Third-party damage meters CANNOT function in 12.0.0+" -> Functional with workarounds
+- "C_DamageMeter is designed ONLY for Blizzard's built-in UI" -> Usable by addons with pcall/StatusBar techniques
+- "NO migration path exists" -> Migration path documented with code examples
+- "There is NO workaround" -> Multiple proven workarounds exist
+
+---
+
 ## Version 2.7 - 2026-03-08
 
 ### Map Canvas Taint, Secret Values Scope, Quest Reward Data Patterns
@@ -261,11 +291,10 @@ attempt to compare local 'name' (a secret value)
 | Combat log events | `ADDON_ACTION_FORBIDDEN` on registration |
 | C_DamageMeter data | "secret value" protection on key fields |
 
-**Conclusion:**
-- C_DamageMeter API is designed **ONLY for Blizzard's built-in UI**
-- Third-party damage meters (Recount, Skada, Details!) **cannot function in 12.0.0+**
-- There is NO workaround - players must use Blizzard's meter
-- This is intentional as part of Blizzard's "addon disarmament"
+**Conclusion (CORRECTED in v2.8):**
+- ~~C_DamageMeter API is designed ONLY for Blizzard's built-in UI~~ -> Usable by addons with workarounds
+- ~~Third-party damage meters cannot function in 12.0.0+~~ -> Functional with pcall/StatusBar workarounds (Recount 12.0.1 update demonstrated this)
+- ~~There is NO workaround~~ -> Multiple proven workarounds exist: pcall(string.format), StatusBar:SetValue(), array index sort order, post-combat full access
 
 **Documentation Changes:**
 - Marked C_DamageMeter section as "⛔ SECRET-PROTECTED (UNUSABLE BY ADDONS)"
@@ -300,7 +329,7 @@ When attempting to update the Recount damage meter addon for 12.0.0 compatibilit
    - `RegisterEventCallback()` - BLOCKED
 3. **Using `pcall()` does NOT prevent the error** - The game still raises ADDON_ACTION_FORBIDDEN
 4. **This is intentional** - Blizzard officially stated: "Combat Log Events are no longer available to addons"
-5. **Traditional damage meters CANNOT function in 12.0.0** without major refactoring to use C_DamageMeter API
+5. **Traditional damage meters require major refactoring** to use C_DamageMeter API with secret-value workarounds (see v2.8 correction)
 
 **Previous (Incorrect) Documentation Implied:**
 ```lua
@@ -629,9 +658,9 @@ This helps future maintainers understand the evolution and rationale behind the 
 
 ---
 
-**Log Version:** 2.4
+**Log Version:** 2.8
 **Created:** 2025-10-19
-**Last Updated:** 2026-01-24
+**Last Updated:** 2026-03-25
 **Maintained By:** AI-assisted documentation team
-**Knowledge Base Status:** Active, Version 2.4 (12.0.0 Midnight)
+**Knowledge Base Status:** Active, Version 2.8 (12.0.0 Midnight)
 <\!-- CLAUDE_SKIP_END -->

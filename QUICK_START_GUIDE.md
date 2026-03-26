@@ -29,9 +29,9 @@ Combat-sensitive data is now hidden from addons:
 - Secret values CANNOT be used for arithmetic, comparisons, or string concatenation
 - **Solution for custom health bars:** Use `UnitHealthPercent(unit, false, CurveConstants.ScaleTo100)` - returns NON-SECRET 0-100 percentage
 - **Native StatusBar frames** accept secret values directly (handled at C++ level)
-- Traditional damage meters/combat logs no longer work
-- **⚠️ `C_DamageMeter` API data is ALSO secret-protected** - Third-party damage meters cannot function in 12.0.0+
-- Players must use Blizzard's built-in damage meter (Shift+P or Encounter Journal)
+- Traditional combat log parsing no longer works (`COMBAT_LOG_EVENT_UNFILTERED` blocked)
+- **`C_DamageMeter` API data is secret-protected during combat** but workarounds exist: `pcall(string.format, ...)` extracts values as text, `StatusBar:SetValue()` accepts secrets, array index preserves sort order, and values become fully readable after combat ends
+- See `12a_Secret_Safe_APIs.md` for C_DamageMeter workaround patterns
 - See `12a_Secret_Safe_APIs.md` for the complete secret values API reference
 - See `12_API_Migration_Guide.md` for comprehensive migration patterns
 

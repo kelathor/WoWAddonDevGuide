@@ -91,7 +91,7 @@ Blizzard's stated rationale:
 
 **Goals of the system:**
 1. Prevent automation addons from making combat decisions for players
-2. Stop damage meters from parsing combat data (see [12_API_Migration_Guide.md](12_API_Migration_Guide.md#c_damagemeter-namespace---secret-protected-unusable-by-addons))
+2. Limit damage meters from parsing raw combat data in real-time (see [12_API_Migration_Guide.md](12_API_Migration_Guide.md#c_damagemeter-namespace---secret-protected-usable-with-workarounds)) — though workarounds exist for display purposes
 3. Maintain visual display capabilities (health bars, unit frames still work)
 4. Allow Blizzard's own UI to function normally via secure code paths
 
@@ -775,16 +775,86 @@ All C_ActionBar functions may return secret values during combat:
 
 ### C_DamageMeter APIs
 
-ALL meaningful data from C_DamageMeter is SECRET:
+Key data fields from C_DamageMeter are SECRET during combat, but **proven workarounds exist** for building functional damage meter displays:
 
-| Field | Status |
-|-------|--------|
-| `name` | SECRET |
-| `totalAmount` | SECRET |
-| `amountPerSecond` | SECRET |
-| `sourceGUID` | SECRET |
-| `classFilename` | Accessible (useless without above) |
-| `isLocalPlayer` | Accessible (useless without above) |
+| Field | Status | Workaround |
+|-------|--------|------------|
+| `name` | SECRET during combat | `pcall(string.format, "%s", name)` extracts as text |
+| `totalAmount` | SECRET during combat | `StatusBar:SetValue()` accepts directly; `pcall(string.format, "%.0f", val)` extracts as text |
+| `amountPerSecond` | SECRET during combat | Same as totalAmount |
+| `sourceGUID` | SECRET during combat | Not needed for display; use array index for ordering |
+| `classFilename` | Always accessible | Direct use |
+| `isLocalPlayer` | Always accessible | Direct use |
+| `specIconID` | Always accessible | Direct use |
+
+**After combat ends** (`PLAYER_REGEN_ENABLED` + short delay), all values become non-secret and fully readable for post-combat analysis.
+
+#### Workarounds for Display During Combat
+
+**1. Format secret numbers/strings into displayable text via pcall:**
+
+`pcall(string.format, ...)` executes at the C++ level, which can format secret values into normal strings:
+
+```lua
+-- Display secret DPS value as text
+local ok, text = pcall(string.format, "%.0f", source.amountPerSecond)
+if ok then
+    fontString:SetText(text .. " DPS")
+end
+
+-- Display secret player name
+local ok, nameText = pcall(string.format, "%s", source.name)
+if ok then
+    nameFontString:SetText(nameText)
+end
+```
+
+**2. Use StatusBar for proportional bar display:**
+
+StatusBar widgets accept secret values at the C++ level:
+
+```lua
+-- Use secret values directly for bar scaling
+pcall(statusBar.SetMinMaxValues, statusBar, 0, session.maxAmount)
+pcall(statusBar.SetValue, statusBar, source.totalAmount)
+```
+
+**3. Use array index for sort order:**
+
+`GetCombatSessionFromType()` returns `combatSources` sorted by amount (highest first). The array index itself is not secret:
+
+```lua
+local session = C_DamageMeter.GetCombatSessionFromType(sessionType, meterType)
+for i, source in ipairs(session.combatSources) do
+    -- i=1 is highest damage/healing, i=2 is second, etc.
+    -- Use index to derive a synthetic non-secret ranking value
+    local syntheticValue = math.max(1, 1000 - i)
+    -- source.isLocalPlayer is always accessible for highlighting
+end
+```
+
+**4. Post-combat full data access:**
+
+```lua
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+frame:SetScript("OnEvent", function(self, event)
+    -- Short delay to ensure secrets are fully cleared
+    C_Timer.After(0.5, function()
+        local session = C_DamageMeter.GetCombatSessionFromType(
+            Enum.DamageMeterSessionType.LastFight,
+            Enum.DamageMeterType.DamageDone
+        )
+        for _, source in ipairs(session.combatSources) do
+            -- All values are now non-secret and fully readable
+            local name = source.name
+            local total = source.totalAmount
+            local dps = source.amountPerSecond
+            -- Full arithmetic, comparisons, and string operations work
+        end
+    end)
+end)
+```
 
 ##### APIs Now Returning Nil Instead of Secrets (12.0.1)
 
