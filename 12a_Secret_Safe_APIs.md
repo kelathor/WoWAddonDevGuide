@@ -878,16 +878,25 @@ end
 
 ### Tooltip Data
 
-`C_TooltipInfo` may return secret data for certain tooltip lines:
+`C_TooltipInfo` line fields (`line.leftText`, `line.rightText`) can themselves be secret values — not just `FontString:GetText()` calls from the legacy path. Any addon using `C_TooltipInfo` still needs `issecretvalue()` guards before performing **any** Lua string operation on the text. The error comes from the string operation on the secret (e.g., `string.match`, `string.gsub`, `WrapTextInColorCode()`, concatenation with `..`), not from display — `FontString:SetText()` accepts secrets natively (see below).
 
 ```lua
+-- WRONG: String operations on potentially secret tooltip text
 local tooltipData = C_TooltipInfo.GetUnit(unit)
 local line = tooltipData.lines[2]
--- line.leftText may be secret in combat
-if issecretvalue(line.leftText) then
-    -- Cannot read tooltip text
+local cleaned = line.leftText:gsub("%[(.-)%]", "%1")  -- ERROR if secret!
+local colored = leftColor:WrapTextInColorCode(line.leftText)  -- ERROR if secret!
+
+-- CORRECT: Guard with issecretvalue() BEFORE any string operation
+local tooltipData = C_TooltipInfo.GetUnit(unit)
+local line = tooltipData.lines[2]
+if not issecretvalue(line.leftText) then
+    local cleaned = line.leftText:gsub("%[(.-)%]", "%1")
+    local colored = leftColor:WrapTextInColorCode(line.leftText)
 end
 ```
+
+**Key point:** Migrating from legacy `_G["GameTooltipTextLeft"..i]:GetText()` to `C_TooltipInfo` does NOT eliminate the need for `issecretvalue()` guards. Both paths can return secret values in tainted execution contexts.
 
 **Important:** Secret values in tooltip data can exist at the TABLE level, not just individual fields. `line.leftColor` can be a secret TABLE (not just secret `.r`, `.g`, `.b` fields), and `line.type` can also be secret. Always check the outermost container before indexing:
 
@@ -920,6 +929,26 @@ end
 ```
 
 **Recommended migration:** Use `C_TooltipInfo` APIs (which return structured data) or create a private scanning tooltip. The `_G["GameTooltipTextLeft"..i]` pattern reads from the shared `GameTooltip`, which inherits taint from any prior addon interaction. If you must use this pattern, always guard with `issecretvalue()` checks on both the font string object and its text content.
+
+#### Cross-Client Compatibility
+
+For addons that support both retail (12.0.0+) and classic clients, the global `issecretvalue()` function only exists in retail. Wrap it in a safe function to avoid errors on classic:
+
+```lua
+-- Safe wrapper for cross-client addons
+function MyAddon.SafeIsSecretValue(value)
+    if issecretvalue then
+        return issecretvalue(value)
+    end
+end
+
+-- Usage in tooltip scanning:
+local text = line.leftText  -- or _G["MyTooltipTextLeft"..i]:GetText()
+if not MyAddon.SafeIsSecretValue(text) then
+    -- Safe to perform string operations
+    local cleaned = text:gsub("%[(.-)%]", "%1")
+end
+```
 
 ---
 
