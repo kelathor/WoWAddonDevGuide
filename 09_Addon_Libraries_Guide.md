@@ -1226,6 +1226,7 @@ You can copy library folders from other addons, but it's better to:
 ### Most Essential Libraries
 
 <!-- CLAUDE_SKIP_START -->
+
 | Library | Purpose | When to Use |
 |---------|---------|-------------|
 | **LibStub** | Library loader | Always (foundation) |
@@ -1237,9 +1238,12 @@ You can copy library folders from other addons, but it's better to:
 | **LibDBIcon-1.0** | Minimap icons | Want minimap button |
 | **LibSharedMedia-3.0** | Fonts/textures | Custom media |
 
+<!-- CLAUDE_SKIP_END -->
+
 ### Library Loading Order
 
 **In TOC file, always load:**
+
 1. LibStub first
 2. Other libraries next
 3. Your code last
@@ -1251,6 +1255,8 @@ Libs\AceAddon-3.0\AceAddon-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Core.lua
 ```
+
+<!-- CLAUDE_SKIP_START -->
 
 ---
 

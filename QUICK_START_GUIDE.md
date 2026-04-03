@@ -16,7 +16,7 @@
 ## Welcome!
 <!-- CLAUDE_SKIP_START -->
 
-This knowledge base contains everything you need to create, debug, and maintain World of Warcraft addons. Updated for **WoW 12.0.0 (Midnight)** with Interface version **120000**.
+This knowledge base contains everything you need to create, debug, and maintain World of Warcraft addons. Updated for **WoW 12.0.0 (Midnight)** with Interface version **120001**.
 <!-- CLAUDE_SKIP_END -->
 
 ## Critical 12.0.0 Changes
@@ -340,7 +340,6 @@ WTF\Errors\
 5. **Ask for help** - WoW addon community is helpful!
 
 <!-- CLAUDE_SKIP_END -->
----
 
 ## Ready to Start?
 <!-- CLAUDE_SKIP_START -->

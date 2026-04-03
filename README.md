@@ -86,10 +86,8 @@ This comprehensive knowledge base contains **everything** you need to create, de
 |------|--------|--------------|
 | **01_API_Reference.md** | C_* APIs, function categories | Looking up API calls |
 | **02_Event_System.md** | Event lists and payloads | Need event details |
-<!-- CLAUDE_SKIP_END -->
 
 ## 🎯 Common Use Cases
-<!-- CLAUDE_SKIP_START -->
 
 ### I want to...
 
@@ -141,10 +139,7 @@ This comprehensive knowledge base contains **everything** you need to create, de
 **Track quests**
 → Read: [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) (Quest Tracking) → [01_API_Reference.md](01_API_Reference.md)
 
-<!-- CLAUDE_SKIP_END -->
 ## 🔍 Finding Information
-<!-- CLAUDE_SKIP_START -->
-
 ### By Topic
 
 **UI Framework & Layout:**
@@ -213,11 +208,8 @@ WoW_Addon_Dev_Knowledge_Base/
 ├── 12a_Secret_Safe_APIs.md ⭐
 └── 13_Cooldown_Viewer_Guide.md ⭐
 ```
-<!-- CLAUDE_SKIP_END -->
-
 ## 💡 Tips for Success
 
-<!-- CLAUDE_SKIP_START -->
 ### Best Practices
 1. ✅ **Start small** - Begin with a simple addon
 2. ✅ **Study examples** - Read Blizzard's code in [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md)
@@ -264,10 +256,8 @@ print("Debug:", value)
 - **DevTool** - Variable inspector
 - **Blizzard_DebugTools** - Built-in debug tools
 
-<!-- CLAUDE_SKIP_END -->
 ## 📍 File Paths
 
-<!-- CLAUDE_SKIP_START -->
 ### WoW UI Source (for reference)
 ```
 https://github.com/Gethe/wow-ui-source
@@ -283,11 +273,7 @@ https://github.com/Gethe/wow-ui-source
 WTF\Account\[Account]\SavedVariables\
 WTF\Account\[Account]\[Server]\[Character]\SavedVariables\
 ```
-<!-- CLAUDE_SKIP_END -->
-
 ## 🎓 Learning Path
-<!-- CLAUDE_SKIP_START -->
-
 ### Week 1: Basics
 - [ ] Read [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)
 - [ ] Create your first addon (5-minute tutorial)
@@ -326,10 +312,8 @@ WTF\Account\[Account]\[Server]\[Character]\SavedVariables\
 - [ ] Build multi-addon architecture
 - [ ] Learn to migrate addons for new patches
 
-<!-- CLAUDE_SKIP_END -->
 ## 📚 Additional Resources
 
-<!-- CLAUDE_SKIP_START -->
 ### Official Blizzard Code
 All examples in this knowledge base reference:
 - WoW Version: **12.0.1 (Midnight)**
@@ -365,10 +349,8 @@ All examples in this knowledge base reference:
 - **CurseForge**: Download popular addons for study
 - **Wago.io**: Addon hosting and sharing
 
-<!-- CLAUDE_SKIP_END -->
 ## ✅ Completeness Checklist
 
-<!-- CLAUDE_SKIP_START -->
 This knowledge base includes:
 - ✅ Complete API reference (513 files analyzed)
 - ✅ Complete event system documentation
@@ -381,10 +363,8 @@ This knowledge base includes:
 - ✅ File organization and categorization
 - ✅ Blizzard source code analysis
 
-<!-- CLAUDE_SKIP_END -->
 ## 🎯 Next Steps
 
-<!-- CLAUDE_SKIP_START -->
 1. **New Developer?** → Start with [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)
 2. **Need specific feature?** → Use the "I want to..." section above
 3. **Want deep knowledge?** → Read all 15 guides in order ([00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) through [12_API_Migration_Guide.md](12_API_Migration_Guide.md))
@@ -404,6 +384,3 @@ This knowledge base includes:
 ---
 
 <!-- CLAUDE_SKIP_END -->
-**Happy Addon Development!** 🚀
-
-For questions about using this knowledge base, refer to [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) or [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md).

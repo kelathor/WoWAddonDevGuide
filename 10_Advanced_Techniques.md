@@ -2006,8 +2006,6 @@ _G.MyAdvancedAddon = {
 | Multi-Addon | ElvUI | `ElvUI/` + `ElvUI_Options/` |
 | Smart Caching | ArkInventory | `Core/ArkInventoryStorage.lua` |
 
-All paths relative to: `D:\Games\World of Warcraft\_retail_\Interface\AddOns\`
-
 ---
 
 **Version:** 2.0 - Based on WoW 12.0.0 (Midnight)

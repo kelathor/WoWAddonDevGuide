@@ -1928,8 +1928,6 @@ sortManager:ToggleSortAscending("name");
 | Encoding Util | `Blizzard_SharedXML\EncodingUtil.lua` |
 | Housing API | `Blizzard_Housing\*.lua` |
 
-All paths relative to: `D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+\Interface\AddOns\`
-
 ---
 
 **Version:** 2.0 - Updated for WoW 12.0.0 (Midnight)
