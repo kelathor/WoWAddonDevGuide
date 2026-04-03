@@ -466,7 +466,7 @@ The new Encounter Timeline system provides detailed boss fight information:
 Built-in damage meter support:
 
 - `DAMAGE_METER_COMBAT_SESSION_UPDATED` - Combat session data updated
-  - Payload: `sessionID`
+  - Payload: `type` (DamageMeterType), `sessionID` (number)
 - `DAMAGE_METER_CURRENT_SESSION_UPDATED` - Current session data updated
 - `DAMAGE_METER_RESET` - Damage meter reset
 
