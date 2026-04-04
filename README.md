@@ -372,7 +372,7 @@ This knowledge base includes:
 
 1. **New Developer?** → Start with [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)
 2. **Need specific feature?** → Use the "I want to..." section above
-3. **Want deep knowledge?** → Read all 15 guides in order ([00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) through [12_API_Migration_Guide.md](12_API_Migration_Guide.md))
+3. **Want deep knowledge?** → Read all 15 guides in order ([00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) through [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md))
 4. **Ready to code?** → Reference guides as needed while building
 
 ---
