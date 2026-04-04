@@ -30,7 +30,7 @@ This guide documents advanced techniques used by production addons like **ArkInv
 - Maintain backward compatibility
 - Optimize for performance at scale
 
-**Prerequisites:** Familiarity with basic addon development, Ace3, and the patterns in previous guides.
+**Prerequisites:** Familiarity with basic addon development and the patterns in previous guides. Some examples reference Ace3 (a third-party library — see `09_Addon_Libraries_Guide.md`).
 
 ---
 
@@ -473,23 +473,23 @@ ClassicOnly.lua
 
 Some events fire hundreds of times per second (BAG_UPDATE, UNIT_AURA, etc.). Processing each immediately causes FPS drops.
 
-### Solution: AceBucket-3.0
-
-**Source:** ArkInventory uses this 237+ times throughout codebase
+### Solution: Dirty-Flag Coalescing (Base WoW API)
 
 ```lua
--- Traditional (bad for performance)
-frame:RegisterEvent("BAG_UPDATE");
+-- Coalesce rapid events using a dirty flag + C_Timer
+local isDirty = false
+
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("BAG_UPDATE")
 frame:SetScript("OnEvent", function(self, event)
-    -- Fires potentially 100+ times/second
-    MyAddon:UpdateBags();
-end);
-
--- Bucketed (good for performance)
-local MyAddon = LibStub("AceAddon-3.0"):NewAddon("MyAddon", "AceBucket-3.0");
-
--- Register bucketed event (fires max once per interval)
-MyAddon:RegisterBucketEvent("BAG_UPDATE", 0.5, "UpdateBags");
+    if not isDirty then
+        isDirty = true
+        C_Timer.After(0.5, function()
+            isDirty = false
+            MyAddon:UpdateBags()
+        end)
+    end
+end)
 
 function MyAddon:UpdateBags()
     -- Only fires maximum 2 times per second
@@ -497,17 +497,36 @@ function MyAddon:UpdateBags()
 end
 ```
 
+### Library Alternative: AceBucket-3.0
+
+> **Library Alternative (requires Ace3):** The following uses AceBucket-3.0. See `09_Addon_Libraries_Guide.md` for details.
+
+**Source:** ArkInventory uses this 237+ times throughout codebase
+
+```lua
+local MyAddon = LibStub("AceAddon-3.0"):NewAddon("MyAddon", "AceBucket-3.0");
+
+-- Register bucketed event (fires max once per interval)
+MyAddon:RegisterBucketEvent("BAG_UPDATE", 0.5, "UpdateBags");
+
+function MyAddon:UpdateBags()
+    -- Only fires maximum 2 times per second
+end
+```
+
 ### Pattern: Custom Message Bucketing
+
+> **Ace3 Pattern:** `SendMessage()` and `RegisterBucketMessage()` are AceEvent-3.0 and AceBucket-3.0 methods respectively. See `09_Addon_Libraries_Guide.md`.
 
 **Source:** `ArkInventory/Core/ArkInventoryLDB.lua`
 
 ```lua
--- Send bucketed messages instead of direct calls
+-- Send bucketed messages instead of direct calls (AceBucket-3.0)
 ArkInventory:SendMessage("EVENT_ARKINV_LDB_PET_UPDATE_BUCKET");
 ArkInventory:SendMessage("EVENT_ARKINV_LDB_MOUNT_UPDATE_BUCKET");
 ArkInventory:SendMessage("EVENT_ARKINV_LDB_TOY_UPDATE_BUCKET");
 
--- Register listeners with bucketing
+-- Register listeners with bucketing (AceBucket-3.0)
 MyAddon:RegisterBucketMessage("EVENT_ARKINV_LDB_PET_UPDATE_BUCKET", 1.0, "OnPetsChanged");
 
 function MyAddon:OnPetsChanged()
@@ -576,6 +595,8 @@ G.achievementAlerts = true;
 ```
 
 ### AceDB Integration
+
+> **Library Alternative (requires Ace3):** The following uses AceDB-3.0. For the base WoW API approach to profiles, see `06_Data_Persistence.md`. For AceDB documentation, see `09_Addon_Libraries_Guide.md`.
 
 ```lua
 local defaults = {
@@ -1396,6 +1417,8 @@ function E:ToggleOptions()
     end
 
     -- Options addon is now loaded
+    -- Base WoW API: Settings.OpenToCategory("ElvUI")
+    -- ElvUI uses AceConfigDialog-3.0 (see 09_Addon_Libraries_Guide.md):
     LibStub("AceConfigDialog-3.0"):Open("ElvUI");
 end
 ```
@@ -1842,108 +1865,107 @@ local msg = string.concat("Player ", name, " dealt ", damage, " damage")
 Combining multiple techniques:
 
 ```lua
--- Advanced addon core structure
-local MyAddon = LibStub("AceAddon-3.0"):NewAddon(
-    "MyAdvancedAddon",
-    "AceEvent-3.0",
-    "AceBucket-3.0",
-    "AceConsole-3.0"
-);
-
-local E, L, V, P, G;  -- ElvUI-style tuple
+-- Advanced addon core structure (base WoW API)
+local ADDON_NAME, ns = ...
 
 -- Constants
-local CURRENT_VERSION = 5;
-local MIN_TOC = 120000;  -- Midnight expansion
+local CURRENT_VERSION = 5
+local MIN_TOC = 120000  -- Midnight expansion
 
-function MyAddon:OnInitialize()
-    -- Check client compatibility
-    local toc = select(4, GetBuildInfo());
-    if toc < MIN_TOC then
-        error(string.format("Requires TOC %d+, current is %d", MIN_TOC, toc));
-        return;
+-- Initialize cache
+ns.cache = {
+    items = {},
+    players = {},
+}
+
+-- Event coalescing via dirty flag
+local bagsDirty = false
+
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("BAG_UPDATE")
+frame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+
+frame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" and ... == ADDON_NAME then
+        -- Check client compatibility
+        local toc = select(4, GetBuildInfo())
+        if toc < MIN_TOC then
+            error(string.format("Requires TOC %d+, current is %d", MIN_TOC, toc))
+            return
+        end
+
+        -- Initialize saved variables with defaults
+        MyAddonDB = MyAddonDB or {}
+        local db = MyAddonDB
+        if db.version == nil then db.version = CURRENT_VERSION end
+        if db.fontSize == nil then db.fontSize = 12 end
+        if db.position == nil then db.position = {} end
+        ns.db = db
+
+        -- Migrate if needed
+        if db.version < CURRENT_VERSION then
+            ns:MigrateDatabase()
+        end
+
+        -- Register slash command
+        SLASH_MYADVANCEDADDON1 = "/myaddon"
+        SlashCmdList["MYADVANCEDADDON"] = function(msg)
+            ns:HandleSlashCommand(msg)
+        end
+
+        -- Expose API
+        _G.MyAddonAPI = {
+            VERSION = CURRENT_VERSION,
+            GetItemCount = function(...) return ns:GetItemCount(...) end,
+        }
+
+        self:UnregisterEvent("ADDON_LOADED")
+
+    elseif event == "BAG_UPDATE" or event == "PLAYERBANKSLOTS_CHANGED" then
+        -- Coalesce rapid bag events
+        if not bagsDirty then
+            bagsDirty = true
+            C_Timer.After(0.5, function()
+                bagsDirty = false
+                ns:OnBagsChanged()
+            end)
+        end
     end
+end)
 
-    -- Initialize triple-tier database
-    local defaults = {
-        profile = {
-            fontSize = 12,
-        },
-        global = {
-            version = CURRENT_VERSION,
-        },
-        char = {
-            position = {},
-        },
-    };
-
-    self.db = LibStub("AceDB-3.0"):New("MyAddonDB", defaults);
-
-    -- Create tuple for easy access
-    E = self;
-    L = self.L or {};  -- Locales
-    V = self.db.char;   -- Private
-    P = self.db.profile; -- Profile
-    G = self.db.global;  -- Global
-
-    -- Migrate if needed
-    if G.version < CURRENT_VERSION then
-        self:MigrateDatabase();
-    end
-
-    -- Initialize cache
-    self.cache = {
-        items = {},
-        players = {},
-    };
-
-    -- Register bucketed events
-    self:RegisterBucketEvent({"BAG_UPDATE", "PLAYERBANKSLOTS_CHANGED"}, 0.5, "OnBagsChanged");
-
-    -- Expose API
-    _G.MyAddonAPI = {
-        VERSION = CURRENT_VERSION,
-        GetItemCount = function(...) return self:GetItemCount(...); end,
-    };
-end
-
-function MyAddon:OnBagsChanged()
+function ns:OnBagsChanged()
     -- Clear cache on bag updates
-    wipe(self.cache.items);
+    wipe(self.cache.items)
 
     -- Update UI (batched)
-    self:UpdateDisplay();
+    self:UpdateDisplay()
 end
 
-function MyAddon:GetItemCount(itemID)
+function ns:GetItemCount(itemID)
     -- Check cache
     if self.cache.items[itemID] then
-        return self.cache.items[itemID];
+        return self.cache.items[itemID]
     end
 
     -- Profile this function in debug mode
-    if self.db.profile.debug then
-        local start = debugprofilestop();
-        local count = GetItemCount(itemID, true);
-        local elapsed = debugprofilestop() - start;
+    if ns.db.debug then
+        local start = debugprofilestop()
+        local count = GetItemCount(itemID, true)
+        local elapsed = debugprofilestop() - start
 
         if elapsed > 1 then
-            print(string.format("GetItemCount took %.2fms", elapsed));
+            print(string.format("GetItemCount took %.2fms", elapsed))
         end
 
-        self.cache.items[itemID] = count;
-        return count;
+        self.cache.items[itemID] = count
+        return count
     end
 
     -- Normal mode
-    local count = GetItemCount(itemID, true);
-    self.cache.items[itemID] = count;
-    return count;
-end
-
--- Unpack for modules
-local function unpack(addon)
-    return E, L, V, P, G;
+    local count = GetItemCount(itemID, true)
+    self.cache.items[itemID] = count
+    return count
 end
 
 _G.MyAdvancedAddon = {

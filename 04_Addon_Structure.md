@@ -201,15 +201,15 @@ Variables are saved to `WTF/Config.wtf` area (machine-specific).
 #### `## Dependencies: <addon1>, <addon2>, ...`
 Required addons that must load first. Addon fails to load if dependencies are missing.
 ```
-## Dependencies: LibStub, AceAddon-3.0
 ## Dependencies: Blizzard_SharedXML, Blizzard_Colors
+## Dependencies: MyOtherAddon
 ```
 
 #### `## OptionalDeps: <addon1>, <addon2>, ...`
 Also written as `## OptionalDep:`
 Optional addons that will load first if present, but not required.
 ```
-## OptionalDeps: LibSharedMedia-3.0, AceGUI-3.0
+## OptionalDeps: LibSharedMedia-3.0, LibDataBroker-1.1
 ## OptionalDep: Blizzard_UIParentPanelManager
 ```
 
@@ -562,7 +562,6 @@ MyAddon/
     Libs/
         LibStub.lua
         CallbackHandler-1.0.lua
-        AceAddon-3.0.lua
 
     # Localization
     Locales/
@@ -602,12 +601,10 @@ MyAddon/
     Init.lua               # Pre-initialization
     Core.lua               # Main initialization
 
-    Libs/                  # Embedded libraries
+    Libs/                  # Embedded libraries (optional)
         LibStub/
-        AceAddon-3.0/
-        AceDB-3.0/
-        AceConfig-3.0/
-        AceGUI-3.0/
+        CallbackHandler-1.0/
+        # Add community libraries as needed (see 09_Addon_Libraries_Guide.md)
 
     Locales/
         Locale.lua         # Locale loader
@@ -691,9 +688,9 @@ MainFrame.xml         # Frame XML
 ```
 ## MyAddon.toc
 
-# Libraries (load first)
+# Libraries (load first, if embedding any)
 Libs\LibStub.lua
-Libs\AceAddon-3.0.lua
+Libs\CallbackHandler-1.0.lua
 
 # Core initialization (needs libraries)
 Init.lua
@@ -723,12 +720,7 @@ UI\MainFrame.xml          # Frame definition
 -- File load time (when file is parsed)
 local MyAddon = {}
 
--- Fires for each addon after its files load
-function MyAddon:OnInitialize()
-    -- Saved variables are available here (if LoadSavedVariablesFirst)
-end
-
--- Fires when all addons are loaded
+-- Use ADDON_LOADED to detect when your addon's files have loaded
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, addonName)
@@ -946,11 +938,10 @@ The 12.0.0 expansion introduces significant security changes affecting addon dev
 
 #### Hard Dependency
 ```
-## Dependencies: LibStub, AceAddon-3.0
+## Dependencies: Blizzard_MapCanvas
 
-# In code - safe to use immediately
-local AceAddon = LibStub("AceAddon-3.0")
-local MyAddon = AceAddon:NewAddon("MyAddon")
+# In code - dependency is guaranteed loaded first
+local mapFrame = WorldMapFrame
 ```
 
 #### Optional Dependency
@@ -970,10 +961,10 @@ end
 
 #### Embedding Libraries
 ```
-# TOC file - embed AceAddon
+# TOC file - embed libraries directly
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\AceAddon-3.0\AceAddon-3.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 
 # No Dependencies directive needed - libraries are embedded
 ```
@@ -1032,7 +1023,7 @@ AddonB: ## OptionalDeps: AddonA
 ## Title: MyAddon Options
 ## LoadOnDemand: 1
 ## Dependencies: MyAddon
-## OptionalDeps: AceConfig-3.0
+## OptionalDeps: MyAddon
 
 Options.lua
 OptionsUI.xml
@@ -1128,34 +1119,41 @@ frame:SetScript("OnEvent", function(self, event, addonName)
 end)
 ```
 
-### Pattern 2: AceAddon Framework
+### Pattern 2: Namespace with Event Handler
 
-**Best for:** Medium to large addons, using Ace3 libraries
+**Best for:** Medium to large addons
 
 ```lua
 -- Core.lua
-local AceAddon = LibStub("AceAddon-3.0")
-local MyAddon = AceAddon:NewAddon("MyAddon", "AceEvent-3.0", "AceConsole-3.0")
+local ADDON_NAME, ns = ...
 
-function MyAddon:OnInitialize()
-    -- Called when addon is first loaded
-    self.db = LibStub("AceDB-3.0"):New("MyAddonDB", defaults)
-end
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_LOGIN")
 
-function MyAddon:OnEnable()
-    -- Called when addon is enabled
-    self:RegisterEvent("PLAYER_LOGIN")
-    self:RegisterChatCommand("myaddon", "SlashCommand")
-end
+frame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" and ... == ADDON_NAME then
+        -- Saved variables available
+        ns.db = MyAddonDB or {}
+        MyAddonDB = ns.db
+        self:UnregisterEvent("ADDON_LOADED")
+    elseif event == "PLAYER_LOGIN" then
+        -- All game data available, initialize UI
+        ns:Initialize()
+    end
+end)
 
-function MyAddon:OnDisable()
-    -- Called when addon is disabled
-end
-
-function MyAddon:PLAYER_LOGIN()
-    self:Print("Player logged in!")
+function ns:Initialize()
+    -- Register slash command
+    SLASH_MYADDON1 = "/myaddon"
+    SlashCmdList["MYADDON"] = function(msg)
+        ns:HandleSlashCommand(msg)
+    end
+    print("MyAddon loaded!")
 end
 ```
+
+> **Library alternative:** For Ace3-based initialization using `OnInitialize`/`OnEnable` callbacks, see `09_Addon_Libraries_Guide.md`.
 
 ### Pattern 3: Namespaced Module Pattern
 
@@ -1407,99 +1405,29 @@ ns:RegisterModule("Events", Events)
 
 ### LibStub Pattern
 
-LibStub is the standard library management system for WoW addons.
+LibStub is a widely-used community library loader for WoW addons (not part of the base WoW API — see `09_Addon_Libraries_Guide.md`).
 
 ```lua
 -- Embedding LibStub
 ## TOC file
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\AceAddon-3.0\AceAddon-3.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 
 -- Using LibStub
 local LibStub = LibStub
-local AceAddon = LibStub("AceAddon-3.0")
+local LDB = LibStub("LibDataBroker-1.1")
 
 -- Check if library exists (safe)
-local AceDB = LibStub("AceDB-3.0", true)  -- true = silent fail
-if AceDB then
-    -- Use AceDB
+local LSM = LibStub("LibSharedMedia-3.0", true)  -- true = silent fail
+if LSM then
+    -- Use LibSharedMedia
 end
 ```
 
 ### Ace3 Integration
 
-#### AceAddon
-```lua
-local AceAddon = LibStub("AceAddon-3.0")
-local MyAddon = AceAddon:NewAddon("MyAddon", "AceEvent-3.0", "AceConsole-3.0")
-
-function MyAddon:OnInitialize()
-    -- Called when addon loads
-end
-
-function MyAddon:OnEnable()
-    -- Called when addon is enabled
-end
-```
-
-#### AceDB (Database)
-```lua
-local AceDB = LibStub("AceDB-3.0")
-
-local defaults = {
-    profile = {
-        enabled = true,
-        scale = 1.0,
-        position = { x = 0, y = 0 }
-    },
-    global = {
-        version = "1.0.0"
-    }
-}
-
-function MyAddon:OnInitialize()
-    self.db = AceDB:New("MyAddonDB", defaults, true)
-    -- true = use default profile
-end
-
--- Access data
-local enabled = MyAddon.db.profile.enabled
-MyAddon.db.profile.scale = 1.5
-```
-
-#### AceConfig (Options)
-```lua
-local AceConfig = LibStub("AceConfig-3.0")
-local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-
-local options = {
-    type = "group",
-    name = "MyAddon",
-    args = {
-        enabled = {
-            type = "toggle",
-            name = "Enabled",
-            desc = "Enable the addon",
-            get = function() return MyAddon.db.profile.enabled end,
-            set = function(_, value) MyAddon.db.profile.enabled = value end,
-        },
-        scale = {
-            type = "range",
-            name = "Scale",
-            desc = "UI scale",
-            min = 0.5,
-            max = 2.0,
-            step = 0.1,
-            get = function() return MyAddon.db.profile.scale end,
-            set = function(_, value) MyAddon.db.profile.scale = value end,
-        }
-    }
-}
-
-AceConfig:RegisterOptionsTable("MyAddon", options)
-AceConfigDialog:AddToBlizOptions("MyAddon", "MyAddon")
-```
+For Ace3 library usage (AceAddon, AceDB, AceConfig, AceGUI, etc.), see `09_Addon_Libraries_Guide.md`.
 
 ### LibSharedMedia
 
@@ -1580,32 +1508,7 @@ end
 
 ### AceLocale Integration
 
-```lua
--- Locales/enUS.lua
-local L = LibStub("AceLocale-3.0"):NewLocale("MyAddon", "enUS", true)
-if not L then return end
-
-L["Hello"] = true
-L["Goodbye"] = true
-L["Welcome %s"] = true
-```
-
-```lua
--- Locales/deDE.lua
-local L = LibStub("AceLocale-3.0"):NewLocale("MyAddon", "deDE")
-if not L then return end
-
-L["Hello"] = "Hallo"
-L["Goodbye"] = "Auf Wiedersehen"
-```
-
-```lua
--- Core.lua - Usage
-local L = LibStub("AceLocale-3.0"):GetLocale("MyAddon")
-
-print(L["Hello"])
-print(string.format(L["Welcome %s"], playerName))
-```
+For AceLocale-3.0 based localization, see `09_Addon_Libraries_Guide.md`.
 
 ### Locale File Organization
 
@@ -1737,7 +1640,11 @@ end)
 
 ---
 
-### Example 3: Complex Addon with Ace3
+### Example 3: Complex Addon with Libraries
+
+For an example of a complex addon using Ace3 libraries (AceAddon, AceDB, AceConfig), see `09_Addon_Libraries_Guide.md`.
+
+The following shows a complex addon using only base WoW API:
 
 **Purpose:** Full-featured raid frame addon
 
@@ -1745,40 +1652,29 @@ end)
 RaidFrames/
     RaidFrames.toc
 
-    # Libraries
-    Libs\
-        LibStub\LibStub.lua
-        CallbackHandler-1.0\CallbackHandler-1.0.lua
-        AceAddon-3.0\AceAddon-3.0.lua
-        AceEvent-3.0\AceEvent-3.0.lua
-        AceDB-3.0\AceDB-3.0.lua
-        AceConfig-3.0\AceConfig-3.0.lua
-        AceGUI-3.0\AceGUI-3.0.lua
-
     # Core
     Core.lua
     Defaults.lua
 
     # Localization
-    Locales\
-        Locale.xml
+    Locales/
         enUS.lua
         deDE.lua
 
     # Modules
-    Modules\
+    Modules/
         UnitFrames.lua
         RaidFrames.lua
         PartyFrames.lua
 
     # UI
-    UI\
+    UI/
         Templates.xml
         Frames.lua
         Frames.xml
 
     # Config
-    Config\
+    Config/
         Options.lua
 ```
 
@@ -1790,23 +1686,14 @@ RaidFrames/
 ## Version: 2.0.0
 ## Notes: Advanced raid frame addon
 ## SavedVariables: RaidFramesDB
-## OptionalDeps: LibSharedMedia-3.0
-
-# Libraries
-Libs\LibStub\LibStub.lua
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\AceAddon-3.0\AceAddon-3.0.lua
-Libs\AceEvent-3.0\AceEvent-3.0.lua
-Libs\AceDB-3.0\AceDB-3.0.lua
-Libs\AceConfig-3.0\AceConfig-3.0.lua
-Libs\AceGUI-3.0\AceGUI-3.0.lua
 
 # Core
 Defaults.lua
 Core.lua
 
 # Localization
-Locales\Locale.xml
+Locales\enUS.lua
+Locales\deDE.lua
 
 # Modules
 Modules\UnitFrames.lua
@@ -1824,32 +1711,40 @@ Config\Options.lua
 
 **Core.lua:**
 ```lua
-local AceAddon = LibStub("AceAddon-3.0")
-local RaidFrames = AceAddon:NewAddon("RaidFrames", "AceEvent-3.0")
+local ADDON_NAME, ns = ...
 
-function RaidFrames:OnInitialize()
-    self.db = LibStub("AceDB-3.0"):New("RaidFramesDB", self.defaults, true)
+-- Event frame
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:RegisterEvent("GROUP_ROSTER_UPDATE")
 
-    -- Register options
-    local AceConfig = LibStub("AceConfig-3.0")
-    AceConfig:RegisterOptionsTable("RaidFrames", self.options)
+frame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" and ... == ADDON_NAME then
+        -- Initialize saved variables with defaults
+        RaidFramesDB = RaidFramesDB or {}
+        for k, v in pairs(ns.defaults) do
+            if RaidFramesDB[k] == nil then
+                RaidFramesDB[k] = v
+            end
+        end
+        ns.db = RaidFramesDB
 
-    local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-    self.optionsFrame = AceConfigDialog:AddToBlizOptions("RaidFrames", "RaidFrames")
-end
+        -- Register options panel
+        ns:RegisterOptions()
+        self:UnregisterEvent("ADDON_LOADED")
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        ns:UpdateFrames()
+    elseif event == "GROUP_ROSTER_UPDATE" then
+        ns:UpdateRoster()
+    end
+end)
 
-function RaidFrames:OnEnable()
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("GROUP_ROSTER_UPDATE")
-    self:CreateFrames()
-end
-
-function RaidFrames:PLAYER_ENTERING_WORLD()
-    self:UpdateFrames()
-end
-
-function RaidFrames:GROUP_ROSTER_UPDATE()
-    self:UpdateRoster()
+function ns:RegisterOptions()
+    local category = Settings.RegisterCanvasLayoutCategory(
+        ns.optionsFrame, ADDON_NAME
+    )
+    Settings.RegisterAddOnCategory(category)
 end
 ```
 

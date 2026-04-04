@@ -32,6 +32,8 @@
 - **AceGUI-3.0** - GUI widgets
 - **AceLocale-3.0** - Localization
 
+> **Note:** The following uses Ace3 libraries (AceAddon, AceEvent, AceConsole, AceDB). These are third-party community libraries, not part of the base WoW addon API. For base API equivalents, see the Single-File Addon pattern below or `04_Addon_Structure.md`. For detailed Ace3 documentation, see `09_Addon_Libraries_Guide.md`.
+
 **Basic Ace3 Addon Structure:**
 ```lua
 -- MyAddon.lua
@@ -108,30 +110,33 @@ MyAddon/
     └── AceDB-3.0/
 ```
 
-**Module Pattern:**
+**Module Pattern (Base WoW API):**
 ```lua
 -- Core.lua
-MyAddon = LibStub("AceAddon-3.0"):NewAddon("MyAddon");
-MyAddon.modules = {};
+local ADDON_NAME, ns = ...
+ns.modules = {}
 
-function MyAddon:RegisterModule(name, module)
-    self.modules[name] = module;
-    module.parent = self;
+function ns:RegisterModule(name, module)
+    self.modules[name] = module
+end
+
+function ns:InitModules()
+    for name, mod in pairs(self.modules) do
+        if mod.Init then mod:Init() end
+    end
 end
 
 -- Module1.lua
-local Module1 = {};
+local ADDON_NAME, ns = ...
+local Module1 = {}
+ns:RegisterModule("Module1", Module1)
 
-function Module1:OnEnable()
-    print("Module1 enabled");
+function Module1:Init()
+    print("Module1 initialized")
 end
-
-function Module1:OnDisable()
-    print("Module1 disabled");
-end
-
-MyAddon:RegisterModule("Module1", Module1);
 ```
+
+> **Library Alternative:** Ace3 provides a built-in module system via `AceAddon:NewModule()`. See `09_Addon_Libraries_Guide.md`.
 
 ### Single-File Addon
 
@@ -181,56 +186,6 @@ end);
 
 ## Configuration and Options
 
-### Ace3Config Pattern
-
-**Most addons use Ace3 for configuration:**
-
-```lua
-local options = {
-    name = "MyAddon",
-    handler = MyAddon,
-    type = "group",
-    args = {
-        enabled = {
-            type = "toggle",
-            name = "Enable",
-            desc = "Enable/disable the addon",
-            get = function(info) return MyAddon.db.profile.enabled; end,
-            set = function(info, value)
-                MyAddon.db.profile.enabled = value;
-            end,
-        },
-        message = {
-            type = "input",
-            name = "Message",
-            desc = "Custom message to display",
-            get = function(info) return MyAddon.db.profile.message; end,
-            set = function(info, value)
-                MyAddon.db.profile.message = value;
-            end,
-        },
-        color = {
-            type = "color",
-            name = "Color",
-            desc = "Pick a color",
-            hasAlpha = true,
-            get = function(info)
-                local c = MyAddon.db.profile.color;
-                return c.r, c.g, c.b, c.a;
-            end,
-            set = function(info, r, g, b, a)
-                local c = MyAddon.db.profile.color;
-                c.r, c.g, c.b, c.a = r, g, b, a;
-            end,
-        },
-    },
-};
-
--- Register options
-LibStub("AceConfig-3.0"):RegisterOptionsTable("MyAddon", options);
-LibStub("AceConfigDialog-3.0"):AddToBlizOptions("MyAddon", "MyAddon");
-```
-
 ### Blizzard Settings Panel (11.0+)
 
 **Modern WoW settings integration:**
@@ -266,6 +221,35 @@ Settings.CreateDropdown(category, setting, GetOptions, tooltip);
 
 -- Register category
 Settings.RegisterAddOnCategory(category);
+```
+
+### Ace3Config Pattern
+
+> **Library Alternative (requires Ace3):** The following uses AceConfig-3.0 and AceConfigDialog-3.0. See `09_Addon_Libraries_Guide.md` for details.
+
+**Many addons use Ace3 for configuration as a library convenience:**
+
+```lua
+local options = {
+    name = "MyAddon",
+    handler = MyAddon,
+    type = "group",
+    args = {
+        enabled = {
+            type = "toggle",
+            name = "Enable",
+            desc = "Enable/disable the addon",
+            get = function(info) return MyAddon.db.profile.enabled; end,
+            set = function(info, value)
+                MyAddon.db.profile.enabled = value;
+            end,
+        },
+    },
+};
+
+-- Register options
+LibStub("AceConfig-3.0"):RegisterOptionsTable("MyAddon", options);
+LibStub("AceConfigDialog-3.0"):AddToBlizOptions("MyAddon", "MyAddon");
 ```
 
 ---
@@ -309,7 +293,7 @@ local commands = {
     ["set"] = function(rest)
         local key, value = rest:match("^(%S+)%s+(.+)$");
         if key and value then
-            MyAddon.db.profile[key] = value;
+            MyAddonDB.settings[key] = value;
             print("Set", key, "to", value);
         else
             print("Usage: /myaddon set <key> <value>");
@@ -318,7 +302,7 @@ local commands = {
     ["get"] = function(rest)
         local key = rest:match("^(%S+)");
         if key then
-            print(key, "=", tostring(MyAddon.db.profile[key]));
+            print(key, "=", tostring(MyAddonDB.settings[key]));
         else
             print("Usage: /myaddon get <key>");
         end
@@ -371,7 +355,9 @@ end
 
 ### Embedding Libraries
 
-**Pattern used by Ace3 libraries:**
+**Pattern used by Ace3 and other community libraries:**
+
+> The simplest way to use a library is to call it directly: `local MyLib = LibStub("MyLib-1.0"); MyLib:DoSomething()`. The embed/mixin pattern below copies library methods onto your addon object for convenience, and is the approach Ace3 uses internally.
 
 ```lua
 -- MyLib.lua
@@ -401,30 +387,6 @@ MyAddon:DoSomething();  -- Library method now available
 
 ## Localization Patterns
 
-### Basic Localization
-
-```lua
--- Locales/enUS.lua
-local L = LibStub("AceLocale-3.0"):NewLocale("MyAddon", "enUS", true);
-if not L then return; end
-
-L["WELCOME_MESSAGE"] = "Welcome to MyAddon!";
-L["OPTION_ENABLED"] = "Enabled";
-L["OPTION_DISABLED"] = "Disabled";
-
--- Locales/deDE.lua
-local L = LibStub("AceLocale-3.0"):NewLocale("MyAddon", "deDE");
-if not L then return; end
-
-L["WELCOME_MESSAGE"] = "Willkommen bei MyAddon!";
-L["OPTION_ENABLED"] = "Aktiviert";
-L["OPTION_DISABLED"] = "Deaktiviert";
-
--- Usage in code
-local L = LibStub("AceLocale-3.0"):GetLocale("MyAddon");
-print(L["WELCOME_MESSAGE"]);
-```
-
 ### Simple Localization (No Library)
 
 ```lua
@@ -441,11 +403,82 @@ end
 print(L["WELCOME"]);
 ```
 
+### AceLocale Localization
+
+> **Library Alternative (requires Ace3):** See `09_Addon_Libraries_Guide.md` for detailed AceLocale documentation.
+
+```lua
+-- Locales/enUS.lua
+local L = LibStub("AceLocale-3.0"):NewLocale("MyAddon", "enUS", true);
+if not L then return; end
+
+L["WELCOME_MESSAGE"] = "Welcome to MyAddon!";
+L["OPTION_ENABLED"] = "Enabled";
+
+-- Locales/deDE.lua
+local L = LibStub("AceLocale-3.0"):NewLocale("MyAddon", "deDE");
+if not L then return; end
+
+L["WELCOME_MESSAGE"] = "Willkommen bei MyAddon!";
+L["OPTION_ENABLED"] = "Aktiviert";
+
+-- Usage in code
+local L = LibStub("AceLocale-3.0"):GetLocale("MyAddon");
+print(L["WELCOME_MESSAGE"]);
+```
+
 ---
 
 ## Profile Systems
 
-### Ace3 Profile Pattern
+### Base WoW API Profile Pattern
+
+```lua
+-- Manual profile system using raw SavedVariables
+local ADDON_NAME, ns = ...
+local defaultSettings = { fontSize = 12, showTooltips = true }
+
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, addon)
+    if addon == ADDON_NAME then
+        MyAddonDB = MyAddonDB or { profiles = {}, currentProfile = "Default" }
+        local db = MyAddonDB
+
+        -- Ensure current profile exists with defaults
+        local profileName = db.currentProfile
+        if not db.profiles[profileName] then
+            db.profiles[profileName] = {}
+        end
+
+        -- Apply defaults to current profile
+        for k, v in pairs(defaultSettings) do
+            if db.profiles[profileName][k] == nil then
+                db.profiles[profileName][k] = v
+            end
+        end
+
+        ns.settings = db.profiles[profileName]
+        self:UnregisterEvent("ADDON_LOADED")
+    end
+end)
+
+-- Switch profile
+function ns:SetProfile(name)
+    MyAddonDB.currentProfile = name
+    if not MyAddonDB.profiles[name] then
+        MyAddonDB.profiles[name] = {}
+        for k, v in pairs(defaultSettings) do
+            MyAddonDB.profiles[name][k] = v
+        end
+    end
+    ns.settings = MyAddonDB.profiles[name]
+end
+```
+
+### AceDB-3.0 Profile Pattern
+
+> **Library Alternative (requires Ace3):** See `09_Addon_Libraries_Guide.md` for detailed AceDB documentation.
 
 ```lua
 -- Database with profiles
@@ -458,27 +491,12 @@ local defaults = {
 
 MyAddon.db = LibStub("AceDB-3.0"):New("MyAddonDB", defaults, true);
 
--- Profile options
-local profileOptions = LibStub("AceDBOptions-3.0"):GetOptionsTable(MyAddon.db);
-
--- Add to config
-options.args.profiles = profileOptions;
-
 -- Access current profile
 local profile = MyAddon.db.profile;
 print(profile.setting1);
 
 -- Change profile
 MyAddon.db:SetProfile("ProfileName");
-
--- Create new profile
-MyAddon.db:SetProfile("NewProfile");
-
--- Delete profile
-MyAddon.db:DeleteProfile("ProfileName");
-
--- Copy profile
-MyAddon.db:CopyProfile("SourceProfile");
 
 -- Reset profile
 MyAddon.db:ResetProfile();
@@ -1111,20 +1129,25 @@ local function IterateBagSlots(bagID, callback)
 end
 
 -- Inventory addon initialization
-function InventoryAddon:OnInitialize()
-    -- Register for relevant events
-    self:RegisterEvent("BAG_UPDATE");
-    self:RegisterEvent("BANKFRAME_OPENED");
-    self:RegisterEvent("BANKFRAME_CLOSED");
+function InventoryAddon:Initialize()
+    self.frame = CreateFrame("Frame")
+    self.frame:RegisterEvent("BAG_UPDATE")
+    self.frame:RegisterEvent("BANKFRAME_OPENED")
+    self.frame:RegisterEvent("BANKFRAME_CLOSED")
+    self.frame:SetScript("OnEvent", function(_, event, ...)
+        if InventoryAddon[event] then
+            InventoryAddon[event](InventoryAddon, ...)
+        end
+    end)
 
     -- Remove Void Storage tab if feature is gone
     if not hasVoidStorage then
-        self:RemoveVoidStorageTab();
+        self:RemoveVoidStorageTab()
     end
 
     -- Check for Warband bank
     if C_Bank and C_Bank.HasWarbandBank then
-        self:SetupWarbandBankTab();
+        self:SetupWarbandBankTab()
     end
 end
 ```
@@ -1136,112 +1159,120 @@ end
 **Reference:** See `12_Housing_System_Guide.md` for complete API documentation.
 
 ```lua
--- Housing addon base structure
-local HousingAddon = LibStub("AceAddon-3.0"):NewAddon("MyHousingAddon", "AceEvent-3.0");
+-- Housing addon base structure (base WoW API)
+local ADDON_NAME, ns = ...
+local HousingAddon = {}
+ns.HousingAddon = HousingAddon
 
 -- Check for housing availability
-local hasHousingSystem = C_Housing ~= nil;
+local hasHousingSystem = C_Housing ~= nil
 
-function HousingAddon:OnInitialize()
-    if not hasHousingSystem then
-        self:Print("Housing system not available - addon disabled");
-        return;
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+
+frame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" and ... == ADDON_NAME then
+        if not hasHousingSystem then
+            print("Housing system not available - addon disabled")
+            return
+        end
+
+        -- Initialize saved variables
+        MyHousingAddonDB = MyHousingAddonDB or { layouts = {} }
+        HousingAddon.db = MyHousingAddonDB
+
+        -- Register housing events
+        self:RegisterEvent("HOUSING_ENTERED")
+        self:RegisterEvent("HOUSING_EXITED")
+        self:RegisterEvent("HOUSING_DECOR_PLACED")
+        self:RegisterEvent("HOUSING_DECOR_REMOVED")
+        self:RegisterEvent("HOUSING_DECOR_MOVED")
+        self:RegisterEvent("HOUSING_LAYOUT_CHANGED")
+        self:UnregisterEvent("ADDON_LOADED")
+    elseif HousingAddon[event] then
+        HousingAddon[event](HousingAddon, ...)
     end
-
-    self.db = LibStub("AceDB-3.0"):New("MyHousingAddonDB", self.defaults, true);
-end
-
-function HousingAddon:OnEnable()
-    if not hasHousingSystem then return; end
-
-    -- Register housing events
-    self:RegisterEvent("HOUSING_ENTERED");
-    self:RegisterEvent("HOUSING_EXITED");
-    self:RegisterEvent("HOUSING_DECOR_PLACED");
-    self:RegisterEvent("HOUSING_DECOR_REMOVED");
-    self:RegisterEvent("HOUSING_DECOR_MOVED");
-    self:RegisterEvent("HOUSING_LAYOUT_CHANGED");
-end
+end)
 
 -- Housing state management
-function HousingAddon:HOUSING_ENTERED(event, houseID)
-    local houseInfo = C_Housing.GetHouseInfo(houseID);
-    self.currentHouse = houseInfo;
-    self:RefreshDecorList();
+function HousingAddon:HOUSING_ENTERED(houseID)
+    local houseInfo = C_Housing.GetHouseInfo(houseID)
+    self.currentHouse = houseInfo
+    self:RefreshDecorList()
 end
 
-function HousingAddon:HOUSING_EXITED(event)
-    self.currentHouse = nil;
+function HousingAddon:HOUSING_EXITED()
+    self.currentHouse = nil
 end
 
 -- Decor management
 function HousingAddon:GetPlacedDecor()
-    if not self.currentHouse then return {}; end
-    return C_Housing.GetPlacedDecor(self.currentHouse.houseID);
+    if not self.currentHouse then return {} end
+    return C_Housing.GetPlacedDecor(self.currentHouse.houseID)
 end
 
 function HousingAddon:PlaceDecor(decorID, position, rotation)
     if not C_Housing.CanPlaceDecor(decorID) then
-        self:Print("Cannot place this decor item");
-        return false;
+        print("Cannot place this decor item")
+        return false
     end
 
-    return C_Housing.PlaceDecor(decorID, position, rotation);
+    return C_Housing.PlaceDecor(decorID, position, rotation)
 end
 
 -- Layout save/load
 function HousingAddon:SaveLayout(layoutName)
-    local decor = self:GetPlacedDecor();
+    local decor = self:GetPlacedDecor()
     local layout = {
         name = layoutName,
         houseID = self.currentHouse.houseID,
         decor = {},
-    };
+    }
 
     for _, item in ipairs(decor) do
         table.insert(layout.decor, {
             decorID = item.decorID,
             position = item.position,
             rotation = item.rotation,
-        });
+        })
     end
 
-    self.db.profile.layouts[layoutName] = layout;
-    self:Print("Layout saved:", layoutName);
+    self.db.layouts[layoutName] = layout
+    print("Layout saved:", layoutName)
 end
 
 function HousingAddon:LoadLayout(layoutName)
-    local layout = self.db.profile.layouts[layoutName];
+    local layout = self.db.layouts[layoutName]
     if not layout then
-        self:Print("Layout not found:", layoutName);
-        return;
+        print("Layout not found:", layoutName)
+        return
     end
 
     -- Clear current decor first
-    C_Housing.ClearAllDecor();
+    C_Housing.ClearAllDecor()
 
     -- Place saved decor
     for _, item in ipairs(layout.decor) do
-        self:PlaceDecor(item.decorID, item.position, item.rotation);
+        self:PlaceDecor(item.decorID, item.position, item.rotation)
     end
 
-    self:Print("Layout loaded:", layoutName);
+    print("Layout loaded:", layoutName)
 end
 
 -- Neighborhood features
 function HousingAddon:GetNeighborhood()
     if C_Housing.GetNeighborhoodInfo then
-        return C_Housing.GetNeighborhoodInfo();
+        return C_Housing.GetNeighborhoodInfo()
     end
-    return nil;
+    return nil
 end
 
 function HousingAddon:VisitNeighbor(playerGUID)
     if C_Housing.CanVisitHouse and C_Housing.CanVisitHouse(playerGUID) then
-        C_Housing.VisitHouse(playerGUID);
-        return true;
+        C_Housing.VisitHouse(playerGUID)
+        return true
     end
-    return false;
+    return false
 end
 ```
 

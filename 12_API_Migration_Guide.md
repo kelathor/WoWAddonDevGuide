@@ -1690,10 +1690,9 @@ end
 - When tainted (addon) code calls this chain, WoW raises `ADDON_ACTION_BLOCKED`
 - `HideUIPanel()` simply hides the panel without attempting to save/commit settings
 
-**Common Scenario - AceConfig Standalone Dialogs:**
+**Common Scenario - Custom Options Frame:**
 ```lua
--- When opening an AceConfig standalone dialog, you may want to close
--- Blizzard's Settings panel if it's open
+-- When opening a custom options frame, close Blizzard's Settings panel first
 
 local function OpenMyAddonConfig()
     -- Close Blizzard Settings panel first
@@ -1701,10 +1700,12 @@ local function OpenMyAddonConfig()
         HideUIPanel(SettingsPanel)
     end
 
-    -- Now open our standalone config dialog
-    LibStub("AceConfigDialog-3.0"):Open("MyAddon")
+    -- Now open our custom config frame
+    MyAddonOptionsFrame:Show()
 end
 ```
+
+> **If using AceConfigDialog-3.0 (see `09_Addon_Libraries_Guide.md`):** Replace `MyAddonOptionsFrame:Show()` with `LibStub("AceConfigDialog-3.0"):Open("MyAddon")`.
 
 **Integration with Interface Options:**
 ```lua
@@ -1715,7 +1716,7 @@ local function OpenStandaloneOptions()
     if SettingsPanel and SettingsPanel:IsShown() then
         HideUIPanel(SettingsPanel)
     end
-    LibStub("AceConfigDialog-3.0"):Open("MyAddon")
+    MyAddonOptionsFrame:Show()
 end
 
 -- Register a basic category that redirects

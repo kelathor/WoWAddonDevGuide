@@ -274,9 +274,11 @@ local function InitializeCharacterData()
 end
 ```
 
-### Ace3-Style Database
+### Profile-Based Database Structure
 
-**Popular community pattern:**
+> This structure is used by AceDB-3.0 (see `09_Addon_Libraries_Guide.md`), but can also be implemented manually for addons that don't use Ace3.
+
+**Common profile-based pattern:**
 
 ```lua
 MyAddonDB = {
