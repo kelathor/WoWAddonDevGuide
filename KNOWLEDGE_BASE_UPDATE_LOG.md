@@ -1,28 +1,62 @@
 <\!-- CLAUDE_SKIP_START -->
 # WoW Addon Development Knowledge Base - Update Log
 
+## Version 3.0 - 2026-04-03
+
+### Added: Dedicated Ace3 Library Guide + Ace3/Base API Separation
+
+**Summary:**
+Created [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md) — a comprehensive 3,994-line dedicated guide for the Ace3 framework. Audited all guides and removed Ace3-specific APIs (OnInitialize, self:RegisterEvent, AceDB, AceConfig, etc.) that were incorrectly presented as base WoW addon API. Replaced with native equivalents or clear Ace3 labeling with cross-references. Converted all backtick guide references to clickable markdown links across every file.
+
+**Files Created:**
+- [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md) - Complete Ace3 reference covering all 14+ libraries: AceAddon, AceDB, AceDBOptions, AceEvent, AceConsole, AceTimer, AceHook, AceConfig, AceConfigDialog, AceGUI, AceComm, AceSerializer, AceBucket, AceLocale. Includes full API docs, code examples, a complete working addon (GoldTracker), troubleshooting guide, and Ace3 vs Base API comparison table.
+
+**Files Updated (Ace3 separation):**
+- [04_Addon_Structure.md](04_Addon_Structure.md) - Removed 15 Ace3 contamination issues: replaced OnInitialize with ADDON_LOADED, replaced AceAddon pattern with namespace+event handler, removed Ace3 from TOC/structure examples, collapsed Ace3 Integration and AceLocale sections to cross-references, replaced Example 3 with base API equivalent
+- [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) - Fixed 9 issues: added Ace3 disclaimer labels, reordered sections (base API first, Ace3 second), added base API module/profile/localization patterns, replaced Ace3 scaffolding in inventory and housing addon examples with base API
+- [10_Advanced_Techniques.md](10_Advanced_Techniques.md) - Fixed 6 issues: added dirty-flag coalescing as primary solution (AceBucket as labeled alternative), replaced culminating example with base API version, added Ace3 labels to AceDB/AceBucket/AceConfigDialog references
+- [06_Data_Persistence.md](06_Data_Persistence.md) - Renamed "Ace3-Style Database" to "Profile-Based Database Structure" with cross-reference
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - Replaced AceConfigDialog example with base API custom frame, added Ace3 note
+- [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) - Removed ~320 lines of detailed Ace3 content (now in 09a), replaced with brief overview + cross-reference
+
+**Files Updated (cross-references to 09a):**
+- All Ace3-specific cross-references in guides 04, 06, 08, 10, 12 updated from `09_Addon_Libraries_Guide.md` to `09a_Ace3_Library_Guide.md`
+
+**Files Updated (backtick-to-link conversion):**
+- All guide files, [KNOWLEDGE_BASE_UPDATE_LOG.md](KNOWLEDGE_BASE_UPDATE_LOG.md), [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md), [README.md](README.md), [+How To Use This Guide with Claude Code+.md](+How%20To%20Use%20This%20Guide%20with%20Claude%20Code+.md), [WoWAddon-Expert.md](Claude%20AI%20Commands%20%28optional%29/WoWAddon-Expert.md) — converted ~140 backtick code spans to clickable markdown hyperlinks
+
+**Files Updated (agent/command files):**
+- [WoWAddon-Expert.md](Claude%20AI%20Commands%20%28optional%29/WoWAddon-Expert.md) - Added 09a to knowledge base list, added markdown linking rule
+- `wow.md` (coordinator command) - Added markdown linking rule to CRITICAL RULES
+
+**Filename typos fixed:**
+- `11_API_Migration_Guide.md` → [12_API_Migration_Guide.md](12_API_Migration_Guide.md) in [04_Addon_Structure.md](04_Addon_Structure.md)
+- `12_Housing_System_Guide.md` → [11_Housing_System_Guide.md](11_Housing_System_Guide.md) in [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)
+
+---
+
 ## Version 2.9 - 2026-04-03
 
 ### Added: Cooldown Viewer (Cooldown Manager) System Guide
 
 **Summary:**
-Added `13_Cooldown_Viewer_Guide.md` — a comprehensive reference for the Cooldown Viewer (Cooldown Manager) system introduced in WoW 12.0.0+. This guide covers 18 sections including the C_CooldownViewer API, enums, architecture, mixin hierarchy, spell ID resolution, cooldown/aura tracking, alert system (sound/visual/TTS), layout serialization, settings UI, CooldownFrame widget API, and addon integration patterns.
+Added [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) — a comprehensive reference for the Cooldown Viewer (Cooldown Manager) system introduced in WoW 12.0.0+. This guide covers 18 sections including the C_CooldownViewer API, enums, architecture, mixin hierarchy, spell ID resolution, cooldown/aura tracking, alert system (sound/visual/TTS), layout serialization, settings UI, CooldownFrame widget API, and addon integration patterns.
 
 **Files Created:**
-- `13_Cooldown_Viewer_Guide.md` - Complete Cooldown Viewer system reference (18 sections)
+- [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) - Complete Cooldown Viewer system reference (18 sections)
 
 **Files Updated:**
-- `01_API_Reference.md` - Added cross-reference to Cooldown Viewer guide
-- `03_UI_Framework.md` - Added cross-reference to Cooldown Viewer guide
-- `10_Advanced_Techniques.md` - Added cross-reference to Cooldown Viewer guide
-- `12_API_Migration_Guide.md` - Added cross-reference to Cooldown Viewer guide
-- `12a_Secret_Safe_APIs.md` - Added cross-reference to Cooldown Viewer guide
-- `00_MASTER_PROMPT.md` - Added reference to new guide
-- `QUICK_START_GUIDE.md` - Added to documentation list
-- `README.md` - Added to documentation list
-- `WoWAddon-Expert.md` (agent file) - Added Cooldown Viewer guide reference
+- [01_API_Reference.md](01_API_Reference.md) - Added cross-reference to Cooldown Viewer guide
+- [03_UI_Framework.md](03_UI_Framework.md) - Added cross-reference to Cooldown Viewer guide
+- [10_Advanced_Techniques.md](10_Advanced_Techniques.md) - Added cross-reference to Cooldown Viewer guide
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - Added cross-reference to Cooldown Viewer guide
+- [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) - Added cross-reference to Cooldown Viewer guide
+- [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Added reference to new guide
+- [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) - Added to documentation list
+- [README.md](README.md) - Added to documentation list
+- [WoWAddon-Expert.md](Claude%20AI%20Commands%20%28optional%29/WoWAddon-Expert.md) (agent file) - Added Cooldown Viewer guide reference
 - `wow.md` (coordinator command file) - Added Cooldown Viewer guide reference
-- `KNOWLEDGE_BASE_UPDATE_LOG.md` - This entry
+- [KNOWLEDGE_BASE_UPDATE_LOG.md](KNOWLEDGE_BASE_UPDATE_LOG.md) - This entry
 
 **Key Topics Documented:**
 1. C_CooldownViewer API (all functions and their signatures)
@@ -44,12 +78,12 @@ Added `13_Cooldown_Viewer_Guide.md` — a comprehensive reference for the Cooldo
 Corrected documentation that previously stated C_DamageMeter data is "unusable by addons" and that "third-party damage meters CANNOT function in 12.0.0+." Recount has demonstrated a successful 12.0.1 update proving that viable workarounds exist for secret-protected data.
 
 **Files Updated:**
-- `12a_Secret_Safe_APIs.md` - Rewrote C_DamageMeter section with workaround table and four subsections: pcall formatting, StatusBar display, array index sort order, and post-combat full access. Fixed anchor link.
-- `12_API_Migration_Guide.md` - Section was already partially corrected in a prior edit. Verified current content is accurate.
-- `00_MASTER_PROMPT.md` - Replaced "unusable/CANNOT function" comment block with workaround summary.
-- `QUICK_START_GUIDE.md` - Replaced "cannot function" bullet with workaround summary.
-- `08_Community_Addon_Patterns.md` - Rewrote Damage Meters section from "CANNOT FUNCTION" to "FUNCTIONAL WITH WORKAROUNDS" including migration code examples.
-- `KNOWLEDGE_BASE_UPDATE_LOG.md` - Added correction notes to historical entries (v2.3, v2.2).
+- [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) - Rewrote C_DamageMeter section with workaround table and four subsections: pcall formatting, StatusBar display, array index sort order, and post-combat full access. Fixed anchor link.
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - Section was already partially corrected in a prior edit. Verified current content is accurate.
+- [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Replaced "unusable/CANNOT function" comment block with workaround summary.
+- [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) - Replaced "cannot function" bullet with workaround summary.
+- [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) - Rewrote Damage Meters section from "CANNOT FUNCTION" to "FUNCTIONAL WITH WORKAROUNDS" including migration code examples.
+- [KNOWLEDGE_BASE_UPDATE_LOG.md](KNOWLEDGE_BASE_UPDATE_LOG.md) - Added correction notes to historical entries (v2.3, v2.2).
 
 **Key Workarounds Documented:**
 1. `pcall(string.format, "%.0f", secretValue)` -- extracts secret numbers as displayable text at C++ level
@@ -74,9 +108,9 @@ Corrected documentation that previously stated C_DamageMeter data is "unusable b
 Added documentation for map canvas taint propagation (12.0.0+), clarified that secret values appear in ALL tainted execution contexts (not just combat), and documented quest reward data loading patterns including C_TaskQuest behavior.
 
 **Files Updated:**
-- `12_API_Migration_Guide.md` (v2.5) - Added "Map Canvas Taint (12.0.0+)" section covering global frame names, mouse-enabled frames, hooksecurefunc pitfalls, GameTooltip property tainting, and Blizzard pin system as the proper alternative. Added "Quest Reward Data Loading Patterns" section covering HaveQuestData limitations, GetNumQuestLogRewards transient zeros, caching strategies, and C_TaskQuest.GetQuestsOnMap child-zone behavior.
-- `12a_Secret_Safe_APIs.md` - Added "Taint Propagation Beyond Combat" note clarifying that secret values appear in any tainted execution context, not exclusively during InCombatLockdown().
-- `WoWAddon-Expert.md` (agent) - Added map canvas taint, secret values beyond combat, quest reward data, and C_TaskQuest patterns to Additional Practical Patterns. Updated ALWAYS rule for secret values to note they appear beyond combat. Added NEVER rule about global frame names on secure containers.
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) (v2.5) - Added "Map Canvas Taint (12.0.0+)" section covering global frame names, mouse-enabled frames, hooksecurefunc pitfalls, GameTooltip property tainting, and Blizzard pin system as the proper alternative. Added "Quest Reward Data Loading Patterns" section covering HaveQuestData limitations, GetNumQuestLogRewards transient zeros, caching strategies, and C_TaskQuest.GetQuestsOnMap child-zone behavior.
+- [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) - Added "Taint Propagation Beyond Combat" note clarifying that secret values appear in any tainted execution context, not exclusively during InCombatLockdown().
+- [WoWAddon-Expert.md](Claude%20AI%20Commands%20%28optional%29/WoWAddon-Expert.md) (agent) - Added map canvas taint, secret values beyond combat, quest reward data, and C_TaskQuest patterns to Additional Practical Patterns. Updated ALWAYS rule for secret values to note they appear beyond combat. Added NEVER rule about global frame names on secure containers.
 - `wow.md` (coordinator) - Added map canvas taint, secret values beyond combat, and quest reward data rules to Critical Rules section.
 
 **Key Findings Documented:**
@@ -103,9 +137,9 @@ Added documentation for map canvas taint propagation (12.0.0+), clarified that s
 Added comprehensive documentation of aura data behavior under the secret values system in WoW 12.0.0, based on extensive in-game testing. Also documented the removal of spell-name-based lookups from `C_Spell.GetSpellInfo()`.
 
 **Files Updated:**
-- `12a_Secret_Safe_APIs.md` - Major new section "Aura Data Secret Values (12.0.0 - CRITICAL)" with field-by-field secret status table, API-by-API behavior documentation, caching limitations analysis, and practical implications table. Also added "C_Spell.GetSpellInfo() No Longer Accepts Spell Names" section. Expanded migration checklist with aura-specific items.
-- `12_API_Migration_Guide.md` - Updated "Example 3: Aura Tracking" to cover 12.0.0 secret values impact with code examples. Added spell-name-lookup removal notes to C_Spell section.
-- `01_API_Reference.md` - Fixed outdated `GetSpellInfo` entry that listed spell names as valid input. Added aura secret values note to Unit APIs section. Marked old global functions as REMOVED.
+- [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) - Major new section "Aura Data Secret Values (12.0.0 - CRITICAL)" with field-by-field secret status table, API-by-API behavior documentation, caching limitations analysis, and practical implications table. Also added "C_Spell.GetSpellInfo() No Longer Accepts Spell Names" section. Expanded migration checklist with aura-specific items.
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - Updated "Example 3: Aura Tracking" to cover 12.0.0 secret values impact with code examples. Added spell-name-lookup removal notes to C_Spell section.
+- [01_API_Reference.md](01_API_Reference.md) - Fixed outdated `GetSpellInfo` entry that listed spell names as valid input. Added aura secret values note to Unit APIs section. Marked old global functions as REMOVED.
 
 **Key Findings Documented:**
 
@@ -134,18 +168,18 @@ Added comprehensive documentation of aura data behavior under the secret values 
 ### Comprehensive Secret-Safe API Documentation (12.0.0+)
 
 **Summary:**
-Created a new comprehensive documentation file (`12a_Secret_Safe_APIs.md`) that provides complete coverage of WoW 12.0.0's secret values system - one of the most significant API changes in WoW addon history.
+Created a new comprehensive documentation file ([12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md)) that provides complete coverage of WoW 12.0.0's secret values system - one of the most significant API changes in WoW addon history.
 
 **Files Created:**
-- `12a_Secret_Safe_APIs.md` - Complete 1000+ line reference for secret values system
+- [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) - Complete 1000+ line reference for secret values system
 
 **Files Updated:**
-- `00_MASTER_PROMPT.md` - Added reference to new file
-- `01_API_Reference.md` - Updated cross-reference
-- `03_UI_Framework.md` - Updated cross-reference
-- `README.md` - Added to documentation list (now 14 guides)
-- `QUICK_START_GUIDE.md` - Added to guide list
-- `WoWAddon-Expert.md` (agent file) - Added quick-reference section
+- [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Added reference to new file
+- [01_API_Reference.md](01_API_Reference.md) - Updated cross-reference
+- [03_UI_Framework.md](03_UI_Framework.md) - Updated cross-reference
+- [README.md](README.md) - Added to documentation list (now 14 guides)
+- [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) - Added to guide list
+- [WoWAddon-Expert.md](Claude%20AI%20Commands%20%28optional%29/WoWAddon-Expert.md) (agent file) - Added quick-reference section
 
 **Research Sources:**
 1. **Platynator addon** - Real-world addon using `issecretvalue()` for absorb text, guild text, MSP integration
@@ -232,7 +266,7 @@ This guide provides a single authoritative reference for all secret-safe API pat
 Added documentation about the correct way to programmatically close the Blizzard Settings panel from addon code. This is a common requirement for addons that use AceConfig or similar libraries for standalone configuration dialogs.
 
 **Files Updated:**
-- `12_API_Migration_Guide.md` - New section "Closing the Blizzard Settings Panel (12.0.0+)"
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - New section "Closing the Blizzard Settings Panel (12.0.0+)"
 
 **The Issue:**
 When addon code attempts to close the Blizzard Settings panel before opening its own config dialog, common approaches fail:
@@ -265,7 +299,7 @@ Discovered during real-world addon development when trying to create a workflow 
 Added critical documentation about WoW 12.0.0's change to how nameplate click targeting works. This is essential for any addon that replaces or modifies nameplates (TidyPlates, NeatPlates, Plater, KuiNameplates, etc.).
 
 **Files Updated:**
-- `12_API_Migration_Guide.md` - New section "Nameplate Click Targeting Changes (12.0.0)"
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - New section "Nameplate Click Targeting Changes (12.0.0)"
 
 **The Issue:**
 In WoW 12.0.0, Blizzard moved nameplate click detection from Lua-level frame handling to C++ level using a `HitTestFrame` child of the nameplate's UnitFrame. This breaks click targeting for any addon that uses `Hide()` on the Blizzard UnitFrame.
@@ -293,7 +327,7 @@ Added immediately after the "Testing Secret Value Handling" section in the 12.0.
 Through real-world testing of the Recount damage meter addon, we discovered that **C_DamageMeter API data is protected as "secret values"** and cannot be used by third-party addons. This means **no third-party damage meters can function in WoW 12.0.0+**.
 
 **Files Updated:**
-- `12_API_Migration_Guide.md` - Complete rewrite of C_DamageMeter section and Example 5
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - Complete rewrite of C_DamageMeter section and Example 5
 
 **What Was Discovered:**
 
@@ -348,10 +382,10 @@ attempt to compare local 'name' (a secret value)
 ### Critical Fix: Combat Log Events BLOCKED Documentation
 
 **Summary:**
-Updated `12_API_Migration_Guide.md` to accurately document that **combat log events are completely blocked for third-party addons in WoW 12.0.0**. This is a critical correction - the previous documentation showed API migration patterns that **do not work** because event registration itself is blocked.
+Updated [12_API_Migration_Guide.md](12_API_Migration_Guide.md) to accurately document that **combat log events are completely blocked for third-party addons in WoW 12.0.0**. This is a critical correction - the previous documentation showed API migration patterns that **do not work** because event registration itself is blocked.
 
 **Files Updated:**
-- `12_API_Migration_Guide.md` - Added critical warning section, fixed Example 5
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - Added critical warning section, fixed Example 5
 
 **What Was Discovered:**
 
@@ -401,23 +435,23 @@ frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")  -- BLOCKED!
 Comprehensive update of the entire WoW Addon Development Knowledge Base for the Midnight expansion (12.0.0). This update documents the "Addon Apocalypse" - the largest API overhaul in WoW history with 432 new APIs, 140+ removed APIs, and the introduction of the Secret Values security system.
 
 **New Files Added:**
-- `12_Housing_System_Guide.md` - Comprehensive guide for player housing APIs (287+ new functions)
+- [12_Housing_System_Guide.md](12_Housing_System_Guide.md) - Comprehensive guide for player housing APIs (287+ new functions)
 
 **Files Updated (All 13 Guides):**
-- `00_MASTER_PROMPT.md` - Updated for 12.0.0, new namespaces, Secret Values warning
-- `01_API_Reference.md` - Major expansion with 12.0.0 namespaces, Secret Values, new functions
-- `02_Event_System.md` - 75+ new events, callback-based registration, removed events
-- `03_UI_Framework.md` - Secret value widgets, Curve/Duration objects, new widget methods
-- `04_Addon_Structure.md` - New TOC directives, C_AddOns updates, profiling
-- `05_Patterns_And_Best_Practices.md` - Secret values handling, encoding, housing patterns
-- `06_Data_Persistence.md` - C_EncodingUtil, LoadSavedVariablesFirst, Warband data
-- `07_Blizzard_UI_Examples.md` - New Blizzard addons (DamageMeter, Housing, etc.)
-- `08_Community_Addon_Patterns.md` - 12.0 migration guides per addon category
-- `09_Addon_Libraries_Guide.md` - Native API alternatives, library compatibility
-- `10_Advanced_Techniques.md` - Secret Values system, profiling, encounter integration
-- `11_API_Migration_Guide.md` - Complete patch-by-patch documentation 11.0.2-12.0.1
-- `README.md` - Updated version, added Housing guide
-- `QUICK_START_GUIDE.md` - 12.0.0 critical changes section
+- [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Updated for 12.0.0, new namespaces, Secret Values warning
+- [01_API_Reference.md](01_API_Reference.md) - Major expansion with 12.0.0 namespaces, Secret Values, new functions
+- [02_Event_System.md](02_Event_System.md) - 75+ new events, callback-based registration, removed events
+- [03_UI_Framework.md](03_UI_Framework.md) - Secret value widgets, Curve/Duration objects, new widget methods
+- [04_Addon_Structure.md](04_Addon_Structure.md) - New TOC directives, C_AddOns updates, profiling
+- [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) - Secret values handling, encoding, housing patterns
+- [06_Data_Persistence.md](06_Data_Persistence.md) - C_EncodingUtil, LoadSavedVariablesFirst, Warband data
+- [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) - New Blizzard addons (DamageMeter, Housing, etc.)
+- [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) - 12.0 migration guides per addon category
+- [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) - Native API alternatives, library compatibility
+- [10_Advanced_Techniques.md](10_Advanced_Techniques.md) - Secret Values system, profiling, encounter integration
+- [11_API_Migration_Guide.md](11_API_Migration_Guide.md) - Complete patch-by-patch documentation 11.0.2-12.0.1
+- [README.md](README.md) - Updated version, added Housing guide
+- [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) - 12.0.0 critical changes section
 
 **Major Topics Added:**
 1. **Secret Values System (12.0.0)** - Complete documentation of Blizzard's new security system that obscures combat-sensitive data from addons
@@ -467,8 +501,8 @@ This update ensures the knowledge base remains the authoritative reference for W
 **Directories Removed (2026-01-20 Cleanup):**
 The following directories contained outdated 11.x extracted data and were removed to prevent confusion. All useful information from these directories is now incorporated into the main guide files in a more organized and useful format:
 
-- `api_extracted/` - Contained raw API index files (513 entries from 11.x). Redundant with `01_API_Reference.md` which has better organized, example-rich API documentation.
-- `events_extracted/` - Contained alphabetical event list (1,645 events from 11.2.7). Redundant with `02_Event_System.md` which includes event payloads, examples, and 12.0.0 updates.
+- `api_extracted/` - Contained raw API index files (513 entries from 11.x). Redundant with [01_API_Reference.md](01_API_Reference.md) which has better organized, example-rich API documentation.
+- `events_extracted/` - Contained alphabetical event list (1,645 events from 11.2.7). Redundant with [02_Event_System.md](02_Event_System.md) which includes event payloads, examples, and 12.0.0 updates.
 - `file_lists/` - Contained Blizzard addon folder listings from 11.2.7. Low practical value for addon development.
 
 **Rationale:** These directories were originally created as raw data dumps during the initial knowledge base creation. The main guide files (00-12) now contain all relevant information in a curated, example-rich format that's more useful for actual addon development. Keeping outdated extracted data risked causing confusion or misinformation.
@@ -480,11 +514,11 @@ The following directories contained outdated 11.x extracted data and were remove
 ### Major Addition: API Migration Guide
 
 **Files Added:**
-- ✅ `11_API_Migration_Guide.md` - Comprehensive guide for API version migration and compatibility
+- ✅ [11_API_Migration_Guide.md](11_API_Migration_Guide.md) - Comprehensive guide for API version migration and compatibility
 
 **Files Updated:**
-- ✅ `README.md` - Updated to reflect 12 guides, added migration guide to all relevant sections
-- ✅ `00_MASTER_PROMPT.md` - Added reference to new migration guide
+- ✅ [README.md](README.md) - Updated to reflect 12 guides, added migration guide to all relevant sections
+- ✅ [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Added reference to new migration guide
 
 **External Files Updated:**
 - ✅ `C:\Dev\++Claude AI++\prompts\update_wow_addon_dev_guide.md` - Updated prompt template

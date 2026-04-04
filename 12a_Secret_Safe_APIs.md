@@ -1531,7 +1531,7 @@ secretText:SetTextColor(C_ClassColor.GetClassColor(engClass):GetRGB())  -- Class
 This creates the visual appearance of a single line: "Interrupted (PlayerName)" with the name in class color.
 
 **Key requirements:**
-- `SetWidth(0)` on the first FontString so its RIGHT edge matches the text edge (see `03_UI_Framework.md` - FontString Width and Anchoring)
+- `SetWidth(0)` on the first FontString so its RIGHT edge matches the text edge (see [03_UI_Framework.md](03_UI_Framework.md) - FontString Width and Anchoring)
 - Use `SetFormattedText("(%s)", secret)` to add formatting around secret values without Lua concatenation
 - Match fonts between FontStrings with `secretText:SetFont(staticText:GetFont())`
 

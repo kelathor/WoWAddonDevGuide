@@ -253,14 +253,14 @@ end
 
 **The most popular addon framework, used by thousands of addons.**
 
-> **Full Ace3 documentation has moved to `09a_Ace3_Library_Guide.md`.** That guide covers all 14+ Ace3 libraries in detail with complete API references, code examples, a full addon example, troubleshooting, and a comparison table. The summary below is kept for quick reference only.
+> **Full Ace3 documentation has moved to [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).** That guide covers all 14+ Ace3 libraries in detail with complete API references, code examples, a full addon example, troubleshooting, and a comparison table. The summary below is kept for quick reference only.
 
 ### Ace3 Overview
 
 Ace3 is a collection of embeddable libraries that handle common addon tasks: lifecycle management, saved variables with profiles, event handling, slash commands, timers, hooking, configuration GUIs, communication, and localization.
 
 **Repository:** [WoWAce Ace3](https://www.wowace.com/projects/ace3)
-**Full Guide:** See `09a_Ace3_Library_Guide.md` for comprehensive documentation.
+**Full Guide:** See [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md) for comprehensive documentation.
 
 **Core libraries:** AceAddon-3.0, AceDB-3.0, AceDBOptions-3.0, AceEvent-3.0, AceConsole-3.0, AceTimer-3.0, AceHook-3.0, AceBucket-3.0, AceComm-3.0, AceSerializer-3.0, AceConfig-3.0, AceConfigDialog-3.0, AceGUI-3.0, AceLocale-3.0
 

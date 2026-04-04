@@ -912,7 +912,7 @@ The 12.0.0 expansion introduces significant security changes affecting addon dev
 1. Test addons thoroughly on PTR before 12.0.0 launch
 2. Cache important values during `PLAYER_REGEN_ENABLED`
 3. Check `InCombatLockdown()` before secure operations
-4. Reference `11_API_Migration_Guide.md` for detailed migration steps
+4. Reference [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for detailed migration steps
 
 ---
 
@@ -1153,7 +1153,7 @@ function ns:Initialize()
 end
 ```
 
-> **Library alternative:** For Ace3-based initialization using `OnInitialize`/`OnEnable` callbacks, see `09a_Ace3_Library_Guide.md`.
+> **Library alternative:** For Ace3-based initialization using `OnInitialize`/`OnEnable` callbacks, see [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).
 
 ### Pattern 3: Namespaced Module Pattern
 
@@ -1405,7 +1405,7 @@ ns:RegisterModule("Events", Events)
 
 ### LibStub Pattern
 
-LibStub is a widely-used community library loader for WoW addons (not part of the base WoW API — see `09_Addon_Libraries_Guide.md`).
+LibStub is a widely-used community library loader for WoW addons (not part of the base WoW API — see [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md)).
 
 ```lua
 -- Embedding LibStub
@@ -1427,7 +1427,7 @@ end
 
 ### Ace3 Integration
 
-For Ace3 library usage (AceAddon, AceDB, AceConfig, AceGUI, etc.), see `09a_Ace3_Library_Guide.md`.
+For Ace3 library usage (AceAddon, AceDB, AceConfig, AceGUI, etc.), see [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).
 
 ### LibSharedMedia
 
@@ -1508,7 +1508,7 @@ end
 
 ### AceLocale Integration
 
-For AceLocale-3.0 based localization, see `09a_Ace3_Library_Guide.md`.
+For AceLocale-3.0 based localization, see [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).
 
 ### Locale File Organization
 
@@ -1642,7 +1642,7 @@ end)
 
 ### Example 3: Complex Addon with Libraries
 
-For an example of a complex addon using Ace3 libraries (AceAddon, AceDB, AceConfig), see `09a_Ace3_Library_Guide.md`.
+For an example of a complex addon using Ace3 libraries (AceAddon, AceDB, AceConfig), see [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).
 
 The following shows a complex addon using only base WoW API:
 

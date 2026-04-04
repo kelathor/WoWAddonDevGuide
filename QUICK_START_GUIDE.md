@@ -31,9 +31,9 @@ Combat-sensitive data is now hidden from addons:
 - **Native StatusBar frames** accept secret values directly (handled at C++ level)
 - Traditional combat log parsing no longer works (`COMBAT_LOG_EVENT_UNFILTERED` blocked)
 - **`C_DamageMeter` API data is secret-protected during combat** but workarounds exist: `pcall(string.format, ...)` extracts values as text, `StatusBar:SetValue()` accepts secrets, array index preserves sort order, and values become fully readable after combat ends
-- See `12a_Secret_Safe_APIs.md` for C_DamageMeter workaround patterns
-- See `12a_Secret_Safe_APIs.md` for the complete secret values API reference
-- See `12_API_Migration_Guide.md` for comprehensive migration patterns
+- See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for C_DamageMeter workaround patterns
+- See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for the complete secret values API reference
+- See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for comprehensive migration patterns
 
 ### API Migrations
 Many global functions have been removed. Use C_* namespaces:
@@ -63,56 +63,56 @@ Many global functions have been removed. Use C_* namespaces:
 ### For First-Time Addon Developers
 
 **Read in this order:**
-1. **Start Here:** `00_MASTER_PROMPT.md` - Overview of addon development
-2. **Basics:** `04_Addon_Structure.md` - TOC files, file organization
-3. **Data:** `06_Data_Persistence.md` - Saving settings between sessions
-4. **Patterns:** `05_Patterns_And_Best_Practices.md` - How to write good code
-5. **Practice:** `07_Blizzard_UI_Examples.md` - Real working examples
+1. **Start Here:** [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Overview of addon development
+2. **Basics:** [04_Addon_Structure.md](04_Addon_Structure.md) - TOC files, file organization
+3. **Data:** [06_Data_Persistence.md](06_Data_Persistence.md) - Saving settings between sessions
+4. **Patterns:** [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) - How to write good code
+5. **Practice:** [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) - Real working examples
 
 ### For UI Development
 
 **Read in this order:**
-1. `03_UI_Framework.md` - XML, frames, templates, mixins
-2. `07_Blizzard_UI_Examples.md` - Practical examples (action buttons, tooltips, etc.)
-3. `05_Patterns_And_Best_Practices.md` - Best practices section
+1. [03_UI_Framework.md](03_UI_Framework.md) - XML, frames, templates, mixins
+2. [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) - Practical examples (action buttons, tooltips, etc.)
+3. [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) - Best practices section
 
 ### For Specific Features
 
 | I want to... | Read this file | Section |
 |--------------|----------------|---------|
-| **Create action buttons** | `07_Blizzard_UI_Examples.md` | Action Buttons |
-| **Show buffs/debuffs** | `07_Blizzard_UI_Examples.md` | Buff/Debuff Frames |
-| **Create a scrolling list** | `03_UI_Framework.md`, `07_Blizzard_UI_Examples.md` | ScrollBox Pattern |
-| **Save addon settings** | `06_Data_Persistence.md` | All sections |
-| **Track quests** | `07_Blizzard_UI_Examples.md` | Quest Tracking |
-| **Use slash commands** | `08_Community_Addon_Patterns.md` | Slash Commands |
-| **Create options menu** | `08_Community_Addon_Patterns.md` | Configuration |
-| **Add tooltips** | `07_Blizzard_UI_Examples.md` | Tooltips |
-| **Understand events** | `02_Event_System.md` | All sections |
-| **Find API functions** | `01_API_Reference.md` | API categories |
-| **Use mixins** | `05_Patterns_And_Best_Practices.md` | Mixin Patterns |
-| **Handle errors** | `05_Patterns_And_Best_Practices.md` | Error Handling |
-| **Optimize performance** | `05_Patterns_And_Best_Practices.md` | Performance |
+| **Create action buttons** | [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) | Action Buttons |
+| **Show buffs/debuffs** | [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) | Buff/Debuff Frames |
+| **Create a scrolling list** | [03_UI_Framework.md](03_UI_Framework.md), [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) | ScrollBox Pattern |
+| **Save addon settings** | [06_Data_Persistence.md](06_Data_Persistence.md) | All sections |
+| **Track quests** | [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) | Quest Tracking |
+| **Use slash commands** | [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) | Slash Commands |
+| **Create options menu** | [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) | Configuration |
+| **Add tooltips** | [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) | Tooltips |
+| **Understand events** | [02_Event_System.md](02_Event_System.md) | All sections |
+| **Find API functions** | [01_API_Reference.md](01_API_Reference.md) | API categories |
+| **Use mixins** | [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) | Mixin Patterns |
+| **Handle errors** | [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) | Error Handling |
+| **Optimize performance** | [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) | Performance |
 
 ## Complete Documentation Structure
 
 ### Main Documentation Files
 
-1. **00_MASTER_PROMPT.md** - Master overview and entry point
-2. **01_API_Reference.md** - WoW API functions reference
-3. **02_Event_System.md** - Event system and event reference
-4. **03_UI_Framework.md** - XML, frames, widgets, templates
-5. **04_Addon_Structure.md** - TOC files, file organization, load order
-6. **05_Patterns_And_Best_Practices.md** - Coding patterns, best practices
-7. **06_Data_Persistence.md** - Saved variables, database management
-8. **07_Blizzard_UI_Examples.md** - Real-world code examples
-9. **08_Community_Addon_Patterns.md** - Community patterns, Ace3, LibStub
-10. **09_Addon_Libraries_Guide.md** - Library reference (LibStub, Ace3, LibDataBroker)
-11. **10_Advanced_Techniques.md** - Production-level patterns
-12. **11_Housing_System_Guide.md** - Housing system APIs and development
-13. **12_API_Migration_Guide.md** - API version migration and compatibility
-14. **12a_Secret_Safe_APIs.md** - Complete 12.0+ secret values API reference
-15. **13_Cooldown_Viewer_Guide.md** - Cooldown Viewer system: C_CooldownViewer API, alerts, layout, CooldownFrame widget (NEW)
+1. **[00_MASTER_PROMPT.md](00_MASTER_PROMPT.md)** - Master overview and entry point
+2. **[01_API_Reference.md](01_API_Reference.md)** - WoW API functions reference
+3. **[02_Event_System.md](02_Event_System.md)** - Event system and event reference
+4. **[03_UI_Framework.md](03_UI_Framework.md)** - XML, frames, widgets, templates
+5. **[04_Addon_Structure.md](04_Addon_Structure.md)** - TOC files, file organization, load order
+6. **[05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md)** - Coding patterns, best practices
+7. **[06_Data_Persistence.md](06_Data_Persistence.md)** - Saved variables, database management
+8. **[07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md)** - Real-world code examples
+9. **[08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)** - Community patterns, Ace3, LibStub
+10. **[09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md)** - Library reference (LibStub, Ace3, LibDataBroker)
+11. **[10_Advanced_Techniques.md](10_Advanced_Techniques.md)** - Production-level patterns
+12. **[11_Housing_System_Guide.md](11_Housing_System_Guide.md)** - Housing system APIs and development
+13. **[12_API_Migration_Guide.md](12_API_Migration_Guide.md)** - API version migration and compatibility
+14. **[12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md)** - Complete 12.0+ secret values API reference
+15. **[13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md)** - Cooldown Viewer system: C_CooldownViewer API, alerts, layout, CooldownFrame widget (NEW)
 
 <!-- CLAUDE_SKIP_END -->
 ## Your First Addon - 5 Minute Tutorial
@@ -139,7 +139,7 @@ MyFirstAddon.lua
 ```
 ## Interface: 120000, 110207, 40402, 11508
 ```
-This means one TOC file works for Retail, Classic, and everything in between (if your code is compatible). See `04_Addon_Structure.md` for details.
+This means one TOC file works for Retail, Classic, and everything in between (if your code is compatible). See [04_Addon_Structure.md](04_Addon_Structure.md) for details.
 
 ### Step 3: Create Lua File
 **MyFirstAddon.lua:**
@@ -180,10 +180,10 @@ end;
 ### Step 5: Next Steps
 
 Now that you have a working addon, learn more:
-- **Read:** `04_Addon_Structure.md` to understand TOC files
-- **Read:** `06_Data_Persistence.md` to properly save data
-- **Read:** `05_Patterns_And_Best_Practices.md` for coding patterns
-- **Try:** Adding a simple UI frame (see `03_UI_Framework.md`)
+- **Read:** [04_Addon_Structure.md](04_Addon_Structure.md) to understand TOC files
+- **Read:** [06_Data_Persistence.md](06_Data_Persistence.md) to properly save data
+- **Read:** [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) for coding patterns
+- **Try:** Adding a simple UI frame (see [03_UI_Framework.md](03_UI_Framework.md))
 <!-- CLAUDE_SKIP_END -->
 
 ## Common Tasks - Quick Reference
@@ -334,8 +334,8 @@ WTF\Errors\
 <!-- CLAUDE_SKIP_START -->
 
 1. **Build something small** - Start with a simple addon
-2. **Study examples** - Read Blizzard addon code in `07_Blizzard_UI_Examples.md`
-3. **Learn patterns** - Study `05_Patterns_And_Best_Practices.md`
+2. **Study examples** - Read Blizzard addon code in [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md)
+3. **Learn patterns** - Study [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md)
 4. **Experiment** - Try different features
 5. **Ask for help** - WoW addon community is helpful!
 
@@ -347,7 +347,7 @@ WTF\Errors\
 1. ✅ Read this guide
 2. ✅ Create your first addon (5-minute tutorial above)
 3. ✅ Test it in-game
-4. ✅ Read `00_MASTER_PROMPT.md` for full overview
+4. ✅ Read [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) for full overview
 5. ✅ Study specific topics as needed
 
 **Happy coding!**

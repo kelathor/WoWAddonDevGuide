@@ -113,6 +113,7 @@ When reviewing addons with multiple files:
 - **Cooldown frames (12.0.1+):** `SetCooldown`/`SetCooldownFromExpirationTime`/`SetCooldownDuration`/`SetCooldownUNIX` restricted from tainted code with secrets — use `SetCooldownFromDurationObject` exclusively. `ActionButton_ApplyCooldown` secure delegate removed.
 - **Debug Output**: NEVER output debug info to chat frames. ALWAYS create a scrollable, copy-pasteable window (EditBox with multi-line support) so users can easily select and copy debug output for reporting issues
 - **When researching**: Check Blizzard UI Source (see User Configuration at top of file) for official implementation examples
+- **Markdown files**: When creating/editing .md files, ALWAYS use clickable markdown links for cross-file refs (`[file.md](file.md)`) and intra-file section refs (`[Section](#section)`). Backtick filenames should only be used when referencing a path to a file that could change depending on the system.
 
 ## Workflow
 

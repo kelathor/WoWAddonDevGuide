@@ -121,7 +121,7 @@ bar:SetMinMaxValues(0, UnitHealthMax("target"))  -- Works with secrets!
 bar:SetValue(UnitHealth("target"))               -- Works with secrets!
 ```
 
-See `12a_Secret_Safe_APIs.md` for the complete secret values reference, and `12_API_Migration_Guide.md` for migration patterns.
+See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for the complete secret values reference, and [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for migration patterns.
 
 **New Event Callback System (12.0.0)**:
 ```lua
@@ -1004,9 +1004,9 @@ When working on:
 <!-- CLAUDE_SKIP_START -->
 ## Next Steps
 
-For event handling, see `02_Event_System.md`
-For UI framework, see `03_UI_Framework.md`
-For housing system details, see `11_Housing_System_Guide.md`
+For event handling, see [02_Event_System.md](02_Event_System.md)
+For UI framework, see [03_UI_Framework.md](03_UI_Framework.md)
+For housing system details, see [11_Housing_System_Guide.md](11_Housing_System_Guide.md)
 
 ---
 

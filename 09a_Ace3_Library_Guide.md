@@ -1,6 +1,6 @@
 # Ace3 Library Suite -- Comprehensive Guide
 
-> This guide covers the Ace3 framework exclusively. For base WoW API patterns, see `04_Addon_Structure.md`. For non-Ace3 community libraries (LibStub, LibDataBroker, LibSharedMedia, etc.), see `09_Addon_Libraries_Guide.md`.
+> This guide covers the Ace3 framework exclusively. For base WoW API patterns, see [04_Addon_Structure.md](04_Addon_Structure.md). For non-Ace3 community libraries (LibStub, LibDataBroker, LibSharedMedia, etc.), see [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md).
 
 ## Table of Contents
 

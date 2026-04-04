@@ -32,7 +32,7 @@
 - **AceGUI-3.0** - GUI widgets
 - **AceLocale-3.0** - Localization
 
-> **Note:** The following uses Ace3 libraries (AceAddon, AceEvent, AceConsole, AceDB). These are third-party community libraries, not part of the base WoW addon API. For base API equivalents, see the Single-File Addon pattern below or `04_Addon_Structure.md`. For detailed Ace3 documentation, see `09a_Ace3_Library_Guide.md`.
+> **Note:** The following uses Ace3 libraries (AceAddon, AceEvent, AceConsole, AceDB). These are third-party community libraries, not part of the base WoW addon API. For base API equivalents, see the Single-File Addon pattern below or [04_Addon_Structure.md](04_Addon_Structure.md). For detailed Ace3 documentation, see [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).
 
 **Basic Ace3 Addon Structure:**
 ```lua
@@ -136,7 +136,7 @@ function Module1:Init()
 end
 ```
 
-> **Library Alternative:** Ace3 provides a built-in module system via `AceAddon:NewModule()`. See `09a_Ace3_Library_Guide.md`.
+> **Library Alternative:** Ace3 provides a built-in module system via `AceAddon:NewModule()`. See [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).
 
 ### Single-File Addon
 
@@ -225,7 +225,7 @@ Settings.RegisterAddOnCategory(category);
 
 ### Ace3Config Pattern
 
-> **Library Alternative (requires Ace3):** The following uses AceConfig-3.0 and AceConfigDialog-3.0. See `09a_Ace3_Library_Guide.md` for details.
+> **Library Alternative (requires Ace3):** The following uses AceConfig-3.0 and AceConfigDialog-3.0. See [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md) for details.
 
 **Many addons use Ace3 for configuration as a library convenience:**
 
@@ -405,7 +405,7 @@ print(L["WELCOME"]);
 
 ### AceLocale Localization
 
-> **Library Alternative (requires Ace3):** See `09_Addon_Libraries_Guide.md` for detailed AceLocale documentation.
+> **Library Alternative (requires Ace3):** See [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) for detailed AceLocale documentation.
 
 ```lua
 -- Locales/enUS.lua
@@ -478,7 +478,7 @@ end
 
 ### AceDB-3.0 Profile Pattern
 
-> **Library Alternative (requires Ace3):** See `09_Addon_Libraries_Guide.md` for detailed AceDB documentation.
+> **Library Alternative (requires Ace3):** See [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) for detailed AceDB documentation.
 
 ```lua
 -- Database with profiles
@@ -767,7 +767,7 @@ end)
 - Array index from `combatSources` preserves sort order (index 1 = highest)
 - `isLocalPlayer` and `classFilename` are always accessible for UI styling
 - After `PLAYER_REGEN_ENABLED` + delay, all values become non-secret for post-combat analysis
-- See `12a_Secret_Safe_APIs.md` for complete documentation of workaround patterns
+- See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for complete documentation of workaround patterns
 
 ### Boss Mods (DBM, BigWigs, LittleWigs)
 
@@ -1156,7 +1156,7 @@ end
 
 **12.0 introduces player housing with the C_Housing system. This enables an entirely new addon category.**
 
-**Reference:** See `12_Housing_System_Guide.md` for complete API documentation.
+**Reference:** See [11_Housing_System_Guide.md](11_Housing_System_Guide.md) for complete API documentation.
 
 ```lua
 -- Housing addon base structure (base WoW API)

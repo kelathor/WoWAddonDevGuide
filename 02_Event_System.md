@@ -500,7 +500,7 @@ Over 100 new events for the Housing system. Key events include:
 - `HOUSING_VISITOR_LEFT` - Visitor left your house
   - Payload: `visitorName, visitorGUID`
 
-See `12_Housing_System_Guide.md` for the complete Housing event reference.
+See [12_Housing_System_Guide.md](12_Housing_System_Guide.md) for the complete Housing event reference.
 
 ### Transmog Events (11.x - 12.0.0)
 
@@ -795,9 +795,9 @@ These files contain all 1,800+ events organized by system, including event paylo
 <!-- CLAUDE_SKIP_START -->
 ## Next Steps
 
-For API functions to use with events, see `01_API_Reference.md`
-For UI frame setup, see `03_UI_Framework.md`
-For Housing system events, see `12_Housing_System_Guide.md`
+For API functions to use with events, see [01_API_Reference.md](01_API_Reference.md)
+For UI frame setup, see [03_UI_Framework.md](03_UI_Framework.md)
+For Housing system events, see [12_Housing_System_Guide.md](12_Housing_System_Guide.md)
 For complete event list with payloads, read the API documentation files
 
 ---

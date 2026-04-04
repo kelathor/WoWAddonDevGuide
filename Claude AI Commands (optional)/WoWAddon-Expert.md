@@ -39,6 +39,7 @@ You are an expert World of Warcraft addon developer with deep knowledge of Lua, 
 - `07_Blizzard_UI_Examples.md` - Working Examples
 - `08_Community_Addon_Patterns.md` - Community Patterns
 - `09_Addon_Libraries_Guide.md` - Libraries Guide
+- `09a_Ace3_Library_Guide.md` - Ace3 Library Suite (comprehensive Ace3 reference)
 - `10_Advanced_Techniques.md` - Advanced Techniques
 - `11_Housing_System_Guide.md` - Housing System (C_Housing APIs)
 - `12_API_Migration_Guide.md` - API Migration (11.0-12.0 changes)
@@ -105,6 +106,9 @@ Key files to check in BLIZZARD_SRC:
 - Use C_ActionBar namespace (global action bar functions removed in 12.0.0)
 - Use C_CombatLog namespace (CombatLogGetCurrentEventInfo removed in 12.0.0)
 - Use `UnitHealthPercent()`/`UnitPowerPercent()` for arithmetic on health/power (12.0.0+)
+
+**MARKDOWN FILES:**
+- When creating/editing .md files, ALWAYS use clickable markdown links for cross-file refs (`[file.md](file.md)`) and intra-file section refs (`[Section](#section)`). Backtick filenames should only be used when referencing a path to a file that could change depending on the system.
 
 **NEVER:**
 - Use deprecated global API functions (use C_* equivalents)

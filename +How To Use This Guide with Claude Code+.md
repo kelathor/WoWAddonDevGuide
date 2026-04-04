@@ -293,25 +293,25 @@ If the agent reports it can't find documentation:
 |------|---------|
 | `wow.md` | Coordinator command - copy to `~/.claude/commands/` |
 | `WoWAddon-Expert.md` | Worker agent - copy to `~/.claude/agents/` |
-| `README.md` | Quick reference for installation |
+| [README.md](README.md) | Quick reference for installation |
 
 ### Documentation Files (14 total)
 
 | File | Lines | Description |
 |------|-------|-------------|
-| `00_MASTER_PROMPT.md` | ~250 | Master overview |
-| `QUICK_START_GUIDE.md` | ~310 | Quick start |
-| `01_API_Reference.md` | ~400 | API reference |
-| `02_Event_System.md` | ~470 | Event system |
-| `03_UI_Framework.md` | ~1,220 | UI framework |
-| `04_Addon_Structure.md` | ~1,630 | Addon structure |
-| `05_Patterns_And_Best_Practices.md` | ~1,050 | Best practices |
-| `06_Data_Persistence.md` | ~760 | Data persistence |
-| `07_Blizzard_UI_Examples.md` | ~710 | Working examples |
-| `08_Community_Addon_Patterns.md` | ~710 | Community patterns |
-| `09_Addon_Libraries_Guide.md` | ~930 | Libraries guide |
-| `10_Advanced_Techniques.md` | ~1,070 | Advanced techniques |
-| `11_API_Migration_Guide.md` | ~630 | API migration |
+| [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) | ~250 | Master overview |
+| [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) | ~310 | Quick start |
+| [01_API_Reference.md](01_API_Reference.md) | ~400 | API reference |
+| [02_Event_System.md](02_Event_System.md) | ~470 | Event system |
+| [03_UI_Framework.md](03_UI_Framework.md) | ~1,220 | UI framework |
+| [04_Addon_Structure.md](04_Addon_Structure.md) | ~1,630 | Addon structure |
+| [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) | ~1,050 | Best practices |
+| [06_Data_Persistence.md](06_Data_Persistence.md) | ~760 | Data persistence |
+| [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) | ~710 | Working examples |
+| [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) | ~710 | Community patterns |
+| [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) | ~930 | Libraries guide |
+| [10_Advanced_Techniques.md](10_Advanced_Techniques.md) | ~1,070 | Advanced techniques |
+| [11_API_Migration_Guide.md](11_API_Migration_Guide.md) | ~630 | API migration |
 
 ---
 

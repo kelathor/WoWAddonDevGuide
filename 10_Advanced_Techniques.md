@@ -36,7 +36,7 @@ This guide documents advanced techniques used by production addons like **ArkInv
 
 ## Secret Values System (12.0.0)
 
-> **Complete Reference:** See `12a_Secret_Safe_APIs.md` for the comprehensive secret values API reference, including all detection functions, manipulation functions, SecureTypes containers, and real-world examples from Platynator and Blizzard UI source.
+> **Complete Reference:** See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for the comprehensive secret values API reference, including all detection functions, manipulation functions, SecureTypes containers, and real-world examples from Platynator and Blizzard UI source.
 
 ### Overview
 
@@ -596,7 +596,7 @@ G.achievementAlerts = true;
 
 ### AceDB Integration
 
-> **Library Alternative (requires Ace3):** The following uses AceDB-3.0. For the base WoW API approach to profiles, see `06_Data_Persistence.md`. For AceDB documentation, see `09a_Ace3_Library_Guide.md`.
+> **Library Alternative (requires Ace3):** The following uses AceDB-3.0. For the base WoW API approach to profiles, see [06_Data_Persistence.md](06_Data_Persistence.md). For AceDB documentation, see [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md).
 
 ```lua
 local defaults = {

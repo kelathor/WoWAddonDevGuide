@@ -20,7 +20,7 @@ This directory contains comprehensive documentation and source code references f
 ## How to Use This Knowledge Base
 
 ### Quick Start
-**New to WoW addon development?** Start with `QUICK_START_GUIDE.md`
+**New to WoW addon development?** Start with [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)
 
 ### For Addon Development Assistance
 
@@ -28,21 +28,21 @@ When requesting addon development assistance, provide Claude with:
 
 1. **This master prompt** - Start here for context
 2. **Relevant specialized prompts** based on your task:
-   - `01_API_Reference.md` - For WoW API function usage
-   - `02_Event_System.md` - For event handling
-   - `03_UI_Framework.md` - For frames, widgets, and XML
-   - `04_Addon_Structure.md` - For TOC files, file organization
-   - `05_Patterns_And_Best_Practices.md` - For common patterns, mixins, namespaces
-   - `06_Data_Persistence.md` - For saved variables
-   - `07_Blizzard_UI_Examples.md` - For official UI code examples
-   - `08_Community_Addon_Patterns.md` - For community patterns, Ace3, LibStub
-   - `09_Addon_Libraries_Guide.md` - For libraries (LibStub, Ace3, LibDataBroker, etc.)
-   - `10_Advanced_Techniques.md` - For production-level patterns (cross-client, performance, multi-addon)
-   - `11_Housing_System_Guide.md` - For player housing APIs and patterns (12.0+)
-   - `12_API_Migration_Guide.md` - For version upgrades, API compatibility, migration patterns
-   - `12a_Secret_Safe_APIs.md` - Complete reference for 12.0+ secret values and secure execution
-   - `13_Cooldown_Viewer_Guide.md` - Cooldown Viewer (Cooldown Manager) system: C_CooldownViewer API, viewer frames, alert system, layout serialization
-   - `QUICK_START_GUIDE.md` - For getting started quickly
+   - [01_API_Reference.md](01_API_Reference.md) - For WoW API function usage
+   - [02_Event_System.md](02_Event_System.md) - For event handling
+   - [03_UI_Framework.md](03_UI_Framework.md) - For frames, widgets, and XML
+   - [04_Addon_Structure.md](04_Addon_Structure.md) - For TOC files, file organization
+   - [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) - For common patterns, mixins, namespaces
+   - [06_Data_Persistence.md](06_Data_Persistence.md) - For saved variables
+   - [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) - For official UI code examples
+   - [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) - For community patterns, Ace3, LibStub
+   - [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) - For libraries (LibStub, Ace3, LibDataBroker, etc.)
+   - [10_Advanced_Techniques.md](10_Advanced_Techniques.md) - For production-level patterns (cross-client, performance, multi-addon)
+   - [11_Housing_System_Guide.md](11_Housing_System_Guide.md) - For player housing APIs and patterns (12.0+)
+   - [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - For version upgrades, API compatibility, migration patterns
+   - [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) - Complete reference for 12.0+ secret values and secure execution
+   - [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) - Cooldown Viewer (Cooldown Manager) system: C_CooldownViewer API, viewer frames, alert system, layout serialization
+   - [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) - For getting started quickly
 
 3. **Source file references** from the Blizzard UI source code
 <!-- CLAUDE_SKIP_END -->
@@ -79,7 +79,7 @@ The Midnight expansion (12.0.0) introduced massive security changes that broke m
 - Built-in damage meter integration via `C_DamageMeter`
 - Official encounter warnings system via `C_EncounterWarnings`
 - Timeline recording via `C_EncounterTimeline`
-- Player Housing system via `C_Housing` (see `11_Housing_System_Guide.md`)
+- Player Housing system via `C_Housing` (see [11_Housing_System_Guide.md](11_Housing_System_Guide.md))
 
 ### Core Technologies
 - **Language**: Lua 5.1 (modified)
@@ -331,13 +331,13 @@ AddonName/
 
 When asking Claude for addon development help, provide:
 
-1. **For API usage**: Reference `01_API_Reference.md` or specific API documentation files
-2. **For events**: Reference `02_Event_System.md` and the event list
-3. **For UI work**: Reference `03_UI_Framework.md` and Blizzard examples
-4. **For architecture**: Reference `05_Patterns_And_Best_Practices.md`
-5. **For examples**: Reference Blizzard source code or community addon patterns in `08_Community_Addon_Patterns.md`
-6. **For housing addons**: Reference `11_Housing_System_Guide.md` for C_Housing APIs
-7. **For 12.0 migration**: Reference `12_API_Migration_Guide.md` for breaking changes
+1. **For API usage**: Reference [01_API_Reference.md](01_API_Reference.md) or specific API documentation files
+2. **For events**: Reference [02_Event_System.md](02_Event_System.md) and the event list
+3. **For UI work**: Reference [03_UI_Framework.md](03_UI_Framework.md) and Blizzard examples
+4. **For architecture**: Reference [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md)
+5. **For examples**: Reference Blizzard source code or community addon patterns in [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)
+6. **For housing addons**: Reference [11_Housing_System_Guide.md](11_Housing_System_Guide.md) for C_Housing APIs
+7. **For 12.0 migration**: Reference [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for breaking changes
 
 ## Source Code Locations
 
