@@ -30,7 +30,7 @@ This guide documents advanced techniques used by production addons like **ArkInv
 - Maintain backward compatibility
 - Optimize for performance at scale
 
-**Prerequisites:** Familiarity with basic addon development and the patterns in previous guides. Some examples reference Ace3 (a third-party library — see `09_Addon_Libraries_Guide.md`).
+**Prerequisites:** Familiarity with basic addon development and the patterns in previous guides. Some examples reference Ace3 (a third-party library — see `09a_Ace3_Library_Guide.md`).
 
 ---
 
@@ -499,7 +499,7 @@ end
 
 ### Library Alternative: AceBucket-3.0
 
-> **Library Alternative (requires Ace3):** The following uses AceBucket-3.0. See `09_Addon_Libraries_Guide.md` for details.
+> **Library Alternative (requires Ace3):** The following uses AceBucket-3.0. See `09a_Ace3_Library_Guide.md` for details.
 
 **Source:** ArkInventory uses this 237+ times throughout codebase
 
@@ -516,7 +516,7 @@ end
 
 ### Pattern: Custom Message Bucketing
 
-> **Ace3 Pattern:** `SendMessage()` and `RegisterBucketMessage()` are AceEvent-3.0 and AceBucket-3.0 methods respectively. See `09_Addon_Libraries_Guide.md`.
+> **Ace3 Pattern:** `SendMessage()` and `RegisterBucketMessage()` are AceEvent-3.0 and AceBucket-3.0 methods respectively. See `09a_Ace3_Library_Guide.md`.
 
 **Source:** `ArkInventory/Core/ArkInventoryLDB.lua`
 
@@ -596,7 +596,7 @@ G.achievementAlerts = true;
 
 ### AceDB Integration
 
-> **Library Alternative (requires Ace3):** The following uses AceDB-3.0. For the base WoW API approach to profiles, see `06_Data_Persistence.md`. For AceDB documentation, see `09_Addon_Libraries_Guide.md`.
+> **Library Alternative (requires Ace3):** The following uses AceDB-3.0. For the base WoW API approach to profiles, see `06_Data_Persistence.md`. For AceDB documentation, see `09a_Ace3_Library_Guide.md`.
 
 ```lua
 local defaults = {
@@ -1418,7 +1418,7 @@ function E:ToggleOptions()
 
     -- Options addon is now loaded
     -- Base WoW API: Settings.OpenToCategory("ElvUI")
-    -- ElvUI uses AceConfigDialog-3.0 (see 09_Addon_Libraries_Guide.md):
+    -- ElvUI uses AceConfigDialog-3.0 (see 09a_Ace3_Library_Guide.md):
     LibStub("AceConfigDialog-3.0"):Open("ElvUI");
 end
 ```

@@ -1705,7 +1705,7 @@ local function OpenMyAddonConfig()
 end
 ```
 
-> **If using AceConfigDialog-3.0 (see `09_Addon_Libraries_Guide.md`):** Replace `MyAddonOptionsFrame:Show()` with `LibStub("AceConfigDialog-3.0"):Open("MyAddon")`.
+> **If using AceConfigDialog-3.0 (see `09a_Ace3_Library_Guide.md`):** Replace `MyAddonOptionsFrame:Show()` with `LibStub("AceConfigDialog-3.0"):Open("MyAddon")`.
 
 **Integration with Interface Options:**
 ```lua

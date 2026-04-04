@@ -276,7 +276,7 @@ end
 
 ### Profile-Based Database Structure
 
-> This structure is used by AceDB-3.0 (see `09_Addon_Libraries_Guide.md`), but can also be implemented manually for addons that don't use Ace3.
+> This structure is used by AceDB-3.0 (see `09a_Ace3_Library_Guide.md`), but can also be implemented manually for addons that don't use Ace3.
 
 **Common profile-based pattern:**
 
