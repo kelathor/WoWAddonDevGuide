@@ -107,8 +107,9 @@ Many global functions have been removed. Use C_* namespaces:
 7. **[06_Data_Persistence.md](06_Data_Persistence.md)** - Saved variables, database management
 8. **[07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md)** - Real-world code examples
 9. **[08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)** - Community patterns, Ace3, LibStub
-10. **[09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md)** - Library reference (LibStub, Ace3, LibDataBroker)
-11. **[10_Advanced_Techniques.md](10_Advanced_Techniques.md)** - Production-level patterns
+10. **[09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md)** - Library reference (LibStub, LibDataBroker, LibSharedMedia)
+11. **[09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md)** - Comprehensive Ace3 framework reference
+12. **[10_Advanced_Techniques.md](10_Advanced_Techniques.md)** - Production-level patterns
 12. **[11_Housing_System_Guide.md](11_Housing_System_Guide.md)** - Housing system APIs and development
 13. **[12_API_Migration_Guide.md](12_API_Migration_Guide.md)** - API version migration and compatibility
 14. **[12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md)** - Complete 12.0+ secret values API reference

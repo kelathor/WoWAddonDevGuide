@@ -36,7 +36,8 @@ When requesting addon development assistance, provide Claude with:
    - [06_Data_Persistence.md](06_Data_Persistence.md) - For saved variables
    - [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) - For official UI code examples
    - [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) - For community patterns, Ace3, LibStub
-   - [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) - For libraries (LibStub, Ace3, LibDataBroker, etc.)
+   - [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) - For libraries (LibStub, LibDataBroker, LibSharedMedia, etc.)
+   - [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md) - For Ace3 framework (AceAddon, AceDB, AceConfig, AceGUI, etc.)
    - [10_Advanced_Techniques.md](10_Advanced_Techniques.md) - For production-level patterns (cross-client, performance, multi-addon)
    - [11_Housing_System_Guide.md](11_Housing_System_Guide.md) - For player housing APIs and patterns (12.0+)
    - [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - For version upgrades, API compatibility, migration patterns

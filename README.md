@@ -8,7 +8,7 @@ This comprehensive knowledge base contains **everything** you need to create, de
 ## ✨ What's Included
 <!-- CLAUDE_SKIP_END -->
 
-### Complete Documentation (15 Guides + Quick Start)
+### Complete Documentation (16 Guides + Quick Start)
 - ✅ **[00_MASTER_PROMPT.md](00_MASTER_PROMPT.md)** - Master overview and entry point
 - ✅ **[01_API_Reference.md](01_API_Reference.md)** - WoW API functions organized by category
 - ✅ **[02_Event_System.md](02_Event_System.md)** - Complete event system documentation
@@ -18,7 +18,8 @@ This comprehensive knowledge base contains **everything** you need to create, de
 - ✅ **[06_Data_Persistence.md](06_Data_Persistence.md)** - Saved variables, database management ⭐
 - ✅ **[07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md)** - Real working code examples ⭐
 - ✅ **[08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)** - Ace3, LibStub, community frameworks ⭐
-- ✅ **[09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md)** - Complete library reference (LibStub, Ace3, LibDataBroker, etc.) ⭐
+- ✅ **[09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md)** - Library reference (LibStub, LibDataBroker, LibSharedMedia, etc.) ⭐
+- ✅ **[09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md)** - Comprehensive Ace3 framework reference (all 14+ libraries, full examples) ⭐ NEW!
 - ✅ **[10_Advanced_Techniques.md](10_Advanced_Techniques.md)** - Production-level patterns (cross-client, performance, multi-addon) ⭐
 - ✅ **[11_Housing_System_Guide.md](11_Housing_System_Guide.md)** - Housing system APIs and development patterns ⭐
 - ✅ **[12_API_Migration_Guide.md](12_API_Migration_Guide.md)** - API version migration, compatibility wrappers, update strategies ⭐
@@ -75,7 +76,8 @@ This comprehensive knowledge base contains **everything** you need to create, de
 | **05_Patterns_And_Best_Practices.md** | Mixins, events, performance, patterns | Writing good code |
 | **06_Data_Persistence.md** | Saved variables, databases, profiles | Saving settings |
 | **08_Community_Addon_Patterns.md** | Ace3, LibStub, localization, profiles | Using frameworks |
-| **09_Addon_Libraries_Guide.md** | LibStub, Ace3, LibDataBroker, all libraries | Using libraries |
+| **09_Addon_Libraries_Guide.md** | LibStub, LibDataBroker, LibSharedMedia, etc. | Using non-Ace3 libraries |
+| **09a_Ace3_Library_Guide.md** | AceAddon, AceDB, AceConfig, AceGUI, all Ace3 | Using Ace3 framework |
 | **10_Advanced_Techniques.md** | Cross-client, event bucketing, profiling, multi-addon | Production-level addons |
 | **11_Housing_System_Guide.md** | Housing APIs, furniture, decoration | Building housing addons |
 | **12_API_Migration_Guide.md** | Version upgrades, API changes, compatibility | Updating for new patches |
@@ -116,7 +118,7 @@ This comprehensive knowledge base contains **everything** you need to create, de
 → Read: [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) (Performance section)
 
 **Use Ace3 framework**
-→ Read: [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) (Ace3 Library Suite) → [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)
+→ Read: [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md) (complete Ace3 reference) → [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)
 
 **Add minimap icon**
 → Read: [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) (LibDBIcon section)
@@ -202,6 +204,7 @@ WoW_Addon_Dev_Knowledge_Base/
 ├── 07_Blizzard_UI_Examples.md ⭐
 ├── 08_Community_Addon_Patterns.md ⭐
 ├── 09_Addon_Libraries_Guide.md ⭐
+├── 09a_Ace3_Library_Guide.md ⭐
 ├── 10_Advanced_Techniques.md ⭐
 ├── 11_Housing_System_Guide.md ⭐
 ├── 12_API_Migration_Guide.md ⭐

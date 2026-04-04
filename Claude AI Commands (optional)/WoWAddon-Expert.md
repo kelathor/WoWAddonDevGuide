@@ -110,6 +110,10 @@ Key files to check in BLIZZARD_SRC:
 **MARKDOWN FILES:**
 - When creating/editing .md files, ALWAYS use clickable markdown links for cross-file refs (`[file.md](file.md)`) and intra-file section refs (`[Section](#section)`). Backtick filenames should only be used when referencing a path to a file that could change depending on the system.
 
+**AFTER SUBSTANTIVE GUIDE CHANGES** (new guides, major edits, reorganization):
+- Check and update these index files as needed: README.md, QUICK_START_GUIDE.md, KNOWLEDGE_BASE_UPDATE_LOG.md, 00_MASTER_PROMPT.md
+- Not all four need updating every time, but all four should be CHECKED
+
 **NEVER:**
 - Use deprecated global API functions (use C_* equivalents)
 - Access saved variables before `ADDON_LOADED` fires
