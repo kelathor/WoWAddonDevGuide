@@ -168,12 +168,24 @@ end
 ```lua
 -- Before saving data that might contain secrets
 function MyAddon:SaveCombatData(data)
-    -- Scrub any secret values before saving
-    local cleanData = CopyTable(data)
-    scrubsecretvalues(cleanData)
+    -- scrubsecretvalues is varargs-in / varargs-out and CANNOT scrub a table
+    -- in-place: passing a table just returns the table reference unchanged
+    -- (tables themselves are never secret values). Walk the table and scrub
+    -- each scalar field, recursing into nested tables.
+    local function scrubTable(t)
+        local clean = {}
+        for k, v in pairs(t) do
+            if type(v) == "table" then
+                clean[k] = scrubTable(v)
+            else
+                clean[k] = scrubsecretvalues(v)
+            end
+        end
+        return clean
+    end
 
     -- Now safe to serialize
-    MyAddonDB.combatData = cleanData
+    MyAddonDB.combatData = scrubTable(data)
 end
 ```
 
