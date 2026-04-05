@@ -181,7 +181,14 @@ For unit-specific events, use the unit event callbacks to filter by unit:
 local function OnPlayerHealthChanged(unit, ...)
     local health = UnitHealth(unit)
     local maxHealth = UnitHealthMax(unit)
-    print(format("%s health: %d/%d", unit, health, maxHealth))
+    -- 12.0.0+: UnitHealth/UnitHealthMax may return secret values during combat
+    -- or any tainted execution context. Passing a secret through string.format
+    -- with a %d specifier throws a Lua error, so guard with issecretvalue().
+    if issecretvalue(health) or issecretvalue(maxHealth) then
+        print(format("%s health: ???/???", unit))
+    else
+        print(format("%s health: %d/%d", unit, health, maxHealth))
+    end
 end
 
 -- Only fires for "player" unit
