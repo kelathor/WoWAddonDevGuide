@@ -184,7 +184,8 @@ MyAddonDB = {
     stringValue = "hello",
     numberValue = 123.45,
     booleanValue = true,
-    nilValue = nil,  -- Saved as nil
+    -- NOTE: nil CANNOT be stored. Setting a field to nil deletes the key.
+    -- Use false or a sentinel value like "NONE" to represent "explicitly empty".
 
     -- Tables (nested)
     nested = {
