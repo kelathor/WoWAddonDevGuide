@@ -301,7 +301,7 @@ local dataObj = LDB:NewDataObject("MyAddon", {
 })
 
 -- Update data
-function UpdateData()
+local function UpdateData()
     dataObj.text = format("%d gold", GetMoney() / 10000)
 end
 ```
