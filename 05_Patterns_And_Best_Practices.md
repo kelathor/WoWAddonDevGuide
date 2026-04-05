@@ -286,9 +286,12 @@ UnregisterEventCallback("PLAYER_ENTERING_WORLD", callbackID)
 
 -- Unit-specific callbacks (more efficient for unit events)
 RegisterUnitEventCallback("UNIT_HEALTH", function(unit, ...)
+    -- UnitHealth/UnitHealthMax return secrets during combat; guard before arithmetic/format
     local health = UnitHealth(unit)
-    local maxHealth = UnitHealthMax(unit)
-    print(format("Player health: %d/%d", health, maxHealth))
+    if not issecretvalue(health) then
+        local maxHealth = UnitHealthMax(unit)
+        print(format("Player health: %d/%d", health, maxHealth))
+    end
 end, "player")
 
 -- Multiple units
