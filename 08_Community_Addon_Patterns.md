@@ -640,14 +640,15 @@ end
 local function ProfileFunction(funcName, func)
     return function(...)
         local startTime = debugprofilestop()
-        local results = {func(...)}
+        local results = SafePack(func(...))
         local elapsed = debugprofilestop() - startTime
 
         if elapsed > 1 then  -- Log slow calls (>1ms)
             print(format("%s took %.2fms", funcName, elapsed))
         end
 
-        return unpack(results)
+        -- SafePack/SafeUnpack preserve trailing nil return values
+        return SafeUnpack(results)
     end
 end
 

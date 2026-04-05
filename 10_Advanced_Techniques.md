@@ -802,7 +802,7 @@ function MyAddon:ProfileFunction(name, func, ...)
     else
         -- Fallback to debugprofilestop
         local start = debugprofilestop()
-        local results = {func(...)}
+        local results = SafePack(func(...))
         local elapsed = debugprofilestop() - start
 
         local metrics = self.profiling.metrics[name] or { calls = 0, totalTime = 0, peakTime = 0 }
@@ -811,7 +811,8 @@ function MyAddon:ProfileFunction(name, func, ...)
         metrics.peakTime = math.max(metrics.peakTime, elapsed)
         self.profiling.metrics[name] = metrics
 
-        return unpack(results)
+        -- SafePack/SafeUnpack preserve trailing nil return values
+        return SafeUnpack(results)
     end
 end
 
