@@ -1238,9 +1238,10 @@ castBar:SetMinMaxValues(startTimeMs, endTimeMs)  -- e.g., 1738412345000, 1738412
 castBar:SetValue(GetTime() * 1000)
 
 -- CORRECT: Normalized to small range (smooth animation)
+local startTimeSec = startTimeMs / 1000
 local durationSec = (endTimeMs - startTimeMs) / 1000
 castBar:SetMinMaxValues(0, durationSec)  -- e.g., 0, 2.5
-castBar:SetValue(GetTime() - startTimeMs / 1000)
+castBar:SetValue(GetTime() - startTimeSec)
 
 -- BEST (12.0.0+): Use SetTimerDuration (C++ handles everything)
 castBar:SetTimerDuration(UnitCastingDuration(unitid))
