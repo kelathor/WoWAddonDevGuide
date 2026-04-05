@@ -1616,14 +1616,18 @@ end)
 
 ### Opening CDM Settings Programmatically
 
-```lua
--- Out of combat: opens settings panel normally
-CooldownViewerSettings:ShowUIPanel(false)
+There are two ways to open the settings panel from addon code, with different trade-offs:
 
--- In combat: use Show() instead (ShowUIPanel is restricted)
+- **`:ShowUIPanel(fromEditMode)`** (the mixin method) calls the global `ShowUIPanel(self)` internally. This integrates the panel with the UIPanelWindows system — proper layout (won't overlap other panels), ESC closes it, edit-mode handoff is performed when `fromEditMode=true`. Historically the UIPanelWindows system has been a taint vector when invoked from addon code in certain scenarios.
+- **`:Show()`** bypasses the UIPanelWindows system entirely. Safer from UIPanel taint risk, but you lose layout management, ESC-to-close, and edit-mode handoff.
+
+```lua
 if InCombatLockdown() then
+    -- Show() is always safe in combat (no UIPanel interaction at all).
     CooldownViewerSettings:Show()
 else
+    -- Out of combat, the mixin method gives proper UIPanelWindows
+    -- integration. fromEditMode = false here.
     CooldownViewerSettings:ShowUIPanel(false)
 end
 ```
