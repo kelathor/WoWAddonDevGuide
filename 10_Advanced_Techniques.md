@@ -67,8 +67,11 @@ canaccesssecrets()          -- General secret access check
 -- Drop access to secrets (useful for library code)
 dropsecretaccess()          -- Caller loses ability to access secrets
 
--- Remove secrets from a table (useful for serialization)
-scrubsecretvalues(table)    -- Replaces secrets with nil
+-- Strip secrets from a list of values (useful for serialization)
+scrubsecretvalues(...)      -- Varargs-in / varargs-out: returns the input
+                            -- values with any secrets replaced by nil.
+                            -- Does NOT operate on tables in-place — iterate
+                            -- and scrub each field (see Safe Serialization).
 
 -- Create a secret value (for testing)
 secretwrap(value)           -- Wrap a value as secret
