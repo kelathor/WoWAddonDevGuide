@@ -1675,38 +1675,41 @@ local expiredHealing = C_DamageMeter.GetCombatSessionFromType(
 local DamageMeterAddon = {}
 
 function DamageMeterAddon:UpdateDisplay()
-    if not C_DamageMeter or not C_DamageMeter.IsDamageMeterAvailable() then
+    local isAvailable = C_DamageMeter and C_DamageMeter.IsDamageMeterAvailable()
+    if not isAvailable then
         self:ShowUnavailableMessage()
         return
     end
 
+    -- GetCombatSessionFromType returns a DamageMeterCombatSession:
+    --   .combatSources (array of DamageMeterCombatSource)
+    --   .maxAmount (number, highest totalAmount among sources)
     local session = C_DamageMeter.GetCombatSessionFromType(
-        Enum.DamageMeterSessionType.CurrentFight
+        Enum.DamageMeterSessionType.Current,
+        Enum.DamageMeterType.DamageDone
     )
 
-    if not session then
+    if not session or not session.combatSources then
         self:ClearDisplay()
         return
     end
 
-    -- Get damage data for all participants
-    local damageData = C_DamageMeter.GetSessionDamageData(session.sessionID)
+    -- Each DamageMeterCombatSource has:
+    --   .sourceGUID, .name, .classFilename, .specIconID,
+    --   .totalAmount, .amountPerSecond, .isLocalPlayer
+    -- NOTE: totalAmount, amountPerSecond, and name are SECRET during combat.
+    -- Use StatusBar:SetValue (accepts secrets) or issecretvalue() guards.
 
-    -- Sort by damage done
-    table.sort(damageData, function(a, b)
-        return a.totalDamage > b.totalDamage
-    end)
-
-    -- Update UI
-    for i, data in ipairs(damageData) do
+    for i, source in ipairs(session.combatSources) do
         if i > self.maxRows then break end
 
-        local dps = data.totalDamage / session.duration
+        -- StatusBar:SetValue and SetMinMaxValues accept secret values natively
         self:SetRowData(i, {
-            name = data.playerName,
-            damage = data.totalDamage,
-            dps = dps,
-            percent = (data.totalDamage / damageData[1].totalDamage) * 100,
+            name = source.name,                   -- secret during combat
+            class = source.classFilename,          -- never secret
+            amount = source.totalAmount,           -- secret during combat
+            perSecond = source.amountPerSecond,     -- secret during combat
+            maxAmount = session.maxAmount,          -- for bar fill ratio
         })
     end
 end
