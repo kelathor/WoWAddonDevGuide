@@ -669,6 +669,8 @@ local UnitName, UnitGUID = UnitName, UnitGUID
 local GetTime, GetTimePreciseSec = GetTime, GetTimePreciseSec
 ```
 
+> **Note:** WoW exposes `tinsert`, `tremove`, `wipe`, `sort`, `foreach`, `foreachi`, `getn` as globals that alias the corresponding `table.*` functions (see `Blizzard_SharedXMLBase/Compat.lua`). `local tinsert = table.insert` and `local tinsert = tinsert` are equivalent — Blizzard's own 12.0.0 source uses both forms.
+
 ### Table Preallocation (11.1.7+)
 
 ```lua
