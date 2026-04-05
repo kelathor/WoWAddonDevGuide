@@ -96,8 +96,10 @@ function ActionButton_Update(self)
     local icon = C_ActionBar.GetActionTexture and C_ActionBar.GetActionTexture(action) or GetActionTexture(action)
     self.icon:SetTexture(icon)
 
-    -- Count
-    local count = GetActionCount(action)
+    -- Count (global GetActionCount was renamed to GetActionUseCount in C_ActionBar;
+    -- the old global survives only as a deprecation shim gated by
+    -- loadDeprecationFallbacks CVar, so prefer the C_ActionBar form.)
+    local count = C_ActionBar.GetActionUseCount and C_ActionBar.GetActionUseCount(action) or GetActionCount(action)
     self.Count:SetText(count > 1 and count or "")
 
     -- Cooldown (modern API with charges support)
@@ -123,8 +125,9 @@ function ActionButton_Update(self)
         self.icon:SetVertexColor(1.0, 1.0, 1.0)
     end
 
-    -- Usability (mana, requirements)
-    local isUsable, notEnoughMana = IsUsableAction(action)
+    -- Usability (mana, requirements) — global survives only as a deprecation
+    -- shim gated by loadDeprecationFallbacks CVar, so prefer C_ActionBar.
+    local isUsable, notEnoughMana = C_ActionBar.IsUsableAction and C_ActionBar.IsUsableAction(action) or IsUsableAction(action)
     if isUsable then
         self.icon:SetDesaturated(false)
     elseif notEnoughMana then
