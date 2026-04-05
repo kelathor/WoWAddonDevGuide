@@ -784,20 +784,34 @@ end)
 ```
 
 ### Version-Safe Event Registration
-```lua
--- Handle events that may not exist in all versions
-local function SafeRegisterEvent(frame, event)
-    -- Try to register; will silently fail if event doesn't exist
-    pcall(function()
-        frame:RegisterEvent(event)
-    end)
-end
 
--- Or check API availability
-if C_EventUtils and C_EventUtils.IsEventValid then
-    if C_EventUtils.IsEventValid("NEW_EVENT_NAME") then
-        frame:RegisterEvent("NEW_EVENT_NAME")
+For events that may not exist in all client versions, prefer
+`C_EventUtils.IsEventValid(eventName)` (added in Dragonflight, present in
+12.0.0+). It returns a boolean, so typos and missing events are visible at
+the call site rather than silently swallowed.
+
+```lua
+-- Preferred: explicit validity check. Typos surface as "event invalid"
+-- rather than being silently discarded.
+local function SafeRegisterEvent(frame, event)
+    if C_EventUtils and C_EventUtils.IsEventValid and C_EventUtils.IsEventValid(event) then
+        frame:RegisterEvent(event)
+        return true
     end
+    return false
+end
+```
+
+**Legacy fallback (pre-Dragonflight clients only).** Older clients without
+`C_EventUtils` wrapped `RegisterEvent` in `pcall` so an unknown event name
+would be swallowed rather than erroring out. This pattern **silently masks
+typos**, so only use it when targeting clients older than Dragonflight:
+
+```lua
+-- Legacy: silently no-ops if event doesn't exist. DO NOT USE on 10.x+ —
+-- typos will never surface. Kept for cross-version compat only.
+local function LegacySafeRegisterEvent(frame, event)
+    pcall(frame.RegisterEvent, frame, event)
 end
 ```
 
