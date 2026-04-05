@@ -134,7 +134,11 @@ UnregisterEventCallback("UNIT_HEALTH", callbackID)
 
 -- Unit-specific event registration
 RegisterUnitEventCallback("UNIT_HEALTH", function(unit)
-    print("Player health changed to: " .. UnitHealth("player"))
+    -- UnitHealth returns a secret value during combat; use issecretvalue() before arithmetic/concat
+    local health = UnitHealth("player")
+    if not issecretvalue(health) then
+        print("Player health changed to: " .. health)
+    end
 end, "player")
 
 UnregisterUnitEventCallback("UNIT_HEALTH", callbackID, "player")
