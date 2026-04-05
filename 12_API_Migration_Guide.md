@@ -835,31 +835,32 @@ This API returns quests from the queried map AND all child sub-zone maps:
 > **Note:** C_ActionBar functions may return **secret values during combat**. See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for handling patterns.
 
 ```lua
--- OLD globals (REMOVED):
+-- OLD globals (DEPRECATED in 12.0.0 - global shims require loadDeprecationFallbacks CVar):
 GetActionTexture(slot)
 GetActionCooldown(slot)
-GetActionCount(slot)
+GetActionCount(slot)           -- shim for C_ActionBar.GetActionUseCount
 IsUsableAction(slot)
 IsCurrentAction(slot)
 IsAutoRepeatAction(slot)
 IsAttackAction(slot)
-PickupAction(slot)
-PlaceAction(slot)
 HasAction(slot)
-ActionHasRange(slot)
+ActionHasRange(slot)           -- shim for C_ActionBar.HasRangeRequirements
+
+-- STILL LIVE globals (not deprecated, no C_ActionBar equivalent):
+PickupAction(slot)             -- still used by Blizzard's own code
+PlaceAction(slot)              -- still used by Blizzard's own code
 
 -- NEW C_ActionBar namespace:
-C_ActionBar.GetActionTexture(slot)    -- May be SECRET during combat
+C_ActionBar.GetActionTexture(slot)          -- May be SECRET during combat
 C_ActionBar.GetActionCooldown(slot)
-C_ActionBar.GetActionCount(slot)
-C_ActionBar.IsUsableAction(slot)      -- May be SECRET during combat
+C_ActionBar.GetActionUseCount(slot)         -- NOT GetActionCount
+C_ActionBar.IsUsableAction(slot)            -- May be SECRET during combat
 C_ActionBar.IsCurrentAction(slot)
 C_ActionBar.IsAutoRepeatAction(slot)
 C_ActionBar.IsAttackAction(slot)
-C_ActionBar.PickupAction(slot)
-C_ActionBar.PlaceAction(slot)
 C_ActionBar.HasAction(slot)
-C_ActionBar.ActionHasRange(slot)
+C_ActionBar.HasRangeRequirements(slot)      -- NOT ActionHasRange
+C_ActionBar.PutActionInSlot(slotID)         -- places cursor action into slot
 
 -- NEW functions in C_ActionBar:
 C_ActionBar.GetActionBarPage()
@@ -1595,9 +1596,9 @@ local spellBtn, secureSpell = CreateSecureMenuButton(
 #### Major Removals in 12.0.0
 
 **Action Bar Globals (Use C_ActionBar):**
-- All `GetAction*()` globals
-- All `IsAction*()` globals
-- `PickupAction()`, `PlaceAction()`
+- All `GetAction*()` globals (deprecated shims; require loadDeprecationFallbacks CVar)
+- All `IsAction*()` globals (deprecated shims)
+- Note: `PickupAction()` and `PlaceAction()` remain LIVE in 12.0.0 (still used by Blizzard) — no C_ActionBar equivalent
 
 **Combat Log Globals (Use C_CombatLog):**
 - `CombatLogGetCurrentEventInfo()`
@@ -2800,8 +2801,7 @@ HasAction\(
 IsUsableAction\(
 IsCurrentAction\(
 IsAutoRepeatAction\(
-PickupAction\(
-PlaceAction\(
+# Note: PickupAction() and PlaceAction() remain LIVE in 12.0.0 - do NOT flag them
 
 # Search for these patterns (combat log):
 CombatLogGetCurrentEventInfo\(
@@ -3384,7 +3384,6 @@ eventFrame:RegisterEvent("DAMAGE_METER_COMBAT_SESSION_UPDATED")
 | `GetActionCooldown(slot)` | `C_ActionBar.GetActionCooldown(slot)` | 12.0.0 | Namespace move |
 | `HasAction(slot)` | `C_ActionBar.HasAction(slot)` | 12.0.0 | Namespace move |
 | `IsUsableAction(slot)` | `C_ActionBar.IsUsableAction(slot)` | 12.0.0 | Namespace move |
-| `PickupAction(slot)` | `C_ActionBar.PickupAction(slot)` | 12.0.0 | Namespace move |
 | `CombatLogGetCurrentEventInfo()` | `C_CombatLog.GetCurrentEventInfo()` | 12.0.0 | Namespace move |
 | `DoEmote(emote, target)` | `C_ChatInfo.DoEmote(emote, target)` | 12.0.0 | Namespace move |
 | `CancelEmote()` | `C_ChatInfo.CancelEmote()` | 12.0.0 | Namespace move |

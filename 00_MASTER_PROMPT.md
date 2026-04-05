@@ -118,7 +118,7 @@ The Midnight expansion (12.0.0) introduced massive security changes that broke m
 - `C_Transmog` - Redesigned transmog system
 
 **Deprecated/Removed in 12.0:**
-- Global `PickupAction()`, `GetActionTexture()`, etc. - Use `C_ActionBar`
+- Global `GetActionTexture()`, `GetActionCooldown()`, `HasAction()`, etc. - Use `C_ActionBar` namespace (note: `PickupAction()` and `PlaceAction()` globals remain LIVE)
 - Direct CLEU parsing for damage - Use `C_DamageMeter` or `C_CombatLog`
 - `GetTransmogSlotInfo()` and related - Use `C_Transmog`
 

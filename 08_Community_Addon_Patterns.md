@@ -857,24 +857,27 @@ local function GetActionSlotTexture(slot)
     return nil
 end
 
--- Modern action pickup
+-- Action pickup (global PickupAction remains LIVE in 12.0.0 - no C_ActionBar equivalent)
 local function PickupActionSlot(slot)
-    if C_ActionBar.PickupAction then
-        C_ActionBar.PickupAction(slot)
-    end
+    PickupAction(slot)
 end
 
--- Modern action placement
+-- Action placement (global PlaceAction remains LIVE in 12.0.0 - no C_ActionBar equivalent)
 local function PlaceActionInSlot(slot)
-    if C_ActionBar.PlaceAction then
-        C_ActionBar.PlaceAction(slot)
+    PlaceAction(slot)
+end
+
+-- Alternative: C_ActionBar.PutActionInSlot places whatever is on the cursor into slot
+local function PutCursorActionInSlot(slot)
+    if C_ActionBar.PutActionInSlot then
+        C_ActionBar.PutActionInSlot(slot)
     end
 end
 
 -- Modern action bar page management
 local function GetCurrentActionBarPage()
-    if C_ActionBar.GetCurrentPage then
-        return C_ActionBar.GetCurrentPage()
+    if C_ActionBar.GetActionBarPage then
+        return C_ActionBar.GetActionBarPage()
     end
     return 1
 end

@@ -401,12 +401,13 @@ C_ActionBar.IsStackableAction(slot)
 C_ActionBar.IsAttackAction(slot)
 
 -- Pickup and placement
-C_ActionBar.PickupAction(slot)
-C_ActionBar.PlaceAction(slot)
+-- Note: PickupAction() and PlaceAction() remain LIVE globals in 12.0.0
+-- (no C_ActionBar equivalents exist - still used by Blizzard's own code)
+C_ActionBar.PutActionInSlot(slotID)    -- places cursor action into slot
 C_ActionBar.PickupSpellBookItem(slotIndex, bookType)
 
 -- Action counts
-C_ActionBar.GetActionCount(slot)
+C_ActionBar.GetActionUseCount(slot)    -- NOT GetActionCount
 C_ActionBar.GetActionCharges(slot)
 ```
 
@@ -876,7 +877,6 @@ end
 | `HasAction(slot)` | `C_ActionBar.HasAction(slot)` |
 | `IsCurrentAction(slot)` | `C_ActionBar.IsCurrentAction(slot)` |
 | `IsUsableAction(slot)` | `C_ActionBar.IsUsableAction(slot)` |
-| `PickupAction(slot)` | `C_ActionBar.PickupAction(slot)` |
 | `DoEmote("emote")` | `C_ChatInfo.DoEmote("emote")` |
 | `CancelEmote()` | `C_ChatInfo.CancelEmote()` |
 | `BNSendWhisper(...)` | `C_BattleNet.SendWhisper(...)` |
