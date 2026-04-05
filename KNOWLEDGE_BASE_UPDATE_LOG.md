@@ -497,7 +497,7 @@ Comprehensive update of the entire WoW Addon Development Knowledge Base for the 
 7. **C_EncodingUtil (11.1.5)** - Native compression/serialization APIs
 8. **New TOC directives** - Category, Group, LoadSavedVariablesFirst, AllowAddOnTableAccess
 9. **Callback-based event registration (12.0.0)** - New EventUtil patterns
-10. **Lua extensions** - table.create, table.count, string.concat
+10. **Lua extensions** - table.create, table.count
 
 **API Changes Documented:**
 - Patches: 11.0.2, 11.0.5, 11.0.7, 11.1.0, 11.1.5, 11.1.7, 11.2.0, 11.2.5, 11.2.7, 12.0.0, 12.0.1
