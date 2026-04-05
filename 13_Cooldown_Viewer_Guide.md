@@ -1235,9 +1235,9 @@ All appearance setters have `SecretArguments = "AllowedWhenUntainted"`:
 
 | Function | Parameters | Description |
 |----------|-----------|-------------|
-| `CooldownFrame_Set` | `self`, `start`, `duration`, `enable`, `forceShowDrawEdge`, `modRate` | Convenience wrapper: if enabled and start/duration > 0, calls `SetCooldown`; otherwise calls `CooldownFrame_Clear` |
+| `CooldownFrame_Set` | `self`, `start`, `duration`, `enable`, `forceShowDrawEdge`, `modRate` | Convenience wrapper: if enabled and start/duration > 0, calls `SetCooldown`; otherwise calls `CooldownFrame_Clear`. **Inherits `SetCooldown` restrictions** — not safe from tainted code with secret values in 12.0.1+; use `SetCooldownFromDurationObject` instead in that case. |
 | `CooldownFrame_Clear` | `self` | Calls `self:Clear()` |
-| `CooldownFrame_SetDisplayAsPercentage` | `self`, `percentage` | Pauses the cooldown and sets it to display a static percentage (0-1) |
+| `CooldownFrame_SetDisplayAsPercentage` | `self`, `percentage` | Pauses the cooldown and sets it to display a static percentage (0-1). **Inherits `SetCooldown` restrictions** — not safe from tainted code with secret values in 12.0.1+. |
 
 ---
 
