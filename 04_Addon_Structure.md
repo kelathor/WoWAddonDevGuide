@@ -1496,7 +1496,8 @@ ns.L = L
 
 ```lua
 -- Locales/deDE.lua (German)
-local L = ns.L  -- Get existing table
+local ADDON_NAME, ns = ...
+local L = ns.L  -- Get existing table from namespace
 
 if GetLocale() == "deDE" then
     L["Hello"] = "Hallo"
