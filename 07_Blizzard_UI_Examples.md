@@ -412,7 +412,8 @@ local function InitializeDropdown(self, level)
     end
 end
 
--- Setup dropdown
+-- Create and setup dropdown
+local dropdown = CreateFrame("Frame", "MyAddonDropdown", UIParent, "UIDropDownMenuTemplate")
 UIDropDownMenu_Initialize(dropdown, InitializeDropdown)
 UIDropDownMenu_SetWidth(dropdown, 150)
 UIDropDownMenu_SetButtonWidth(dropdown, 150)
