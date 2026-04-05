@@ -322,7 +322,7 @@ end)
 
 WoW has multiple clients (Retail, Classic Era, Cataclysm Classic, Season of Discovery, etc.) with different APIs and features. Large addons need to support multiple clients from one codebase.
 
-###Pattern: TOC Version Detection
+### Pattern: TOC Version Detection
 
 **Source:** `ArkInventory/Core/ArkInventoryClient.lua`
 
