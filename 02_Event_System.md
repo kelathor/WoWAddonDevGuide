@@ -137,11 +137,12 @@ MyFrame:RegisterEvent("PLAYER_LOGOUT")
 
 MyFrame.events = {}
 
-function MyFrame.events:PLAYER_LOGIN()
+-- Define with . (not :) because the dispatch below passes the frame as self
+function MyFrame.events.PLAYER_LOGIN(self)
     print("Logged in!")
 end
 
-function MyFrame.events:PLAYER_LOGOUT()
+function MyFrame.events.PLAYER_LOGOUT(self)
     print("Logging out!")
 end
 
