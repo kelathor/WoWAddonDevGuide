@@ -1711,7 +1711,18 @@ end
 ```lua
 local tooltipData = C_TooltipInfo.GetUnit(self.unit)
 local line = tooltipData.lines[isColorBlindMode and 3 or 2]
-if not issecretvalue and line or (issecretvalue and not issecretvalue(line) and line and not issecretvalue(line.leftText)) then
+
+-- Check that line and its text are accessible (not secret)
+local canUseLine = false
+if not issecretvalue then
+    -- Pre-12.0: no secrets, just check line exists
+    canUseLine = (line ~= nil)
+else
+    -- 12.0+: verify neither line nor leftText is secret
+    canUseLine = line and not issecretvalue(line) and not issecretvalue(line.leftText)
+end
+
+if canUseLine then
     text = line.leftText
 end
 ```
