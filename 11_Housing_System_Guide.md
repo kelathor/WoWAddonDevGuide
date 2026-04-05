@@ -1285,6 +1285,9 @@ SetCVar("housingExpertScaleIncrement", 0.05)
 
 ## Practical Examples
 
+> **Note:** These examples use `print()` for brevity. In a real addon, output should go to a
+> scrollable, copy-pasteable debug window (EditBox), not the chat frame.
+
 ### Example 1: Check if Player is in Their Own House
 ```lua
 local function IsInOwnHouse()
