@@ -746,6 +746,9 @@ frame.healthBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 frame.healthBar:SetStatusBarColor(0, 1, 0)
 
 -- Update health
+-- UnitHealth/UnitHealthMax return secrets during combat, but StatusBar's
+-- SetMinMaxValues and SetValue accept secrets (SecretArguments = "AllowedWhenTainted")
+-- so passing them directly is correct — the bar handles secrets at the C++ level.
 frame:RegisterEvent("UNIT_HEALTH")
 frame:SetScript("OnEvent", function(self, event, unit)
     if unit == self:GetAttribute("unit") then
