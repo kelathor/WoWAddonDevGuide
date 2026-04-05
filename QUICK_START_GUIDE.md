@@ -53,7 +53,7 @@ Many global functions have been removed. Use C_* namespaces:
 ### Key New Namespaces
 - `C_ActionBar` - Action bar management
 - `C_CombatLog` - Combat log access (limited by secret values)
-- `C_DamageMeter` - ⛔ **SECRET-PROTECTED** - Data unusable by third-party addons
+- `C_DamageMeter` - **SECRET-PROTECTED** during combat (workarounds exist — see ["Addon Apocalypse" above](#addon-apocalypse---secret-values))
 - `C_Housing` - Player housing system (see [11_Housing_System_Guide.md](11_Housing_System_Guide.md))
 
 ## How to Use This Knowledge Base
