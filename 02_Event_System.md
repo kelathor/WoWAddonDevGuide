@@ -623,8 +623,8 @@ Several voice chat text-to-speech events have had parameters removed:
 4. `PLAYER_ENTERING_WORLD` - Player in world (also fires on zone/reload)
 
 **Important Notes**:
-- Saved variables are NOT available in `ADDON_LOADED`
-- Saved variables ARE available in `VARIABLES_LOADED` and later
+- Saved variables ARE available in `ADDON_LOADED` — this is the standard place to initialize them (check `addonName` matches yours first)
+- `VARIABLES_LOADED` fires after all addons have loaded — useful if you depend on another addon's saved data
 - `PLAYER_LOGIN` fires exactly once per session
 - `PLAYER_ENTERING_WORLD` fires on login, zone, and `/reload`
 
