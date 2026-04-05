@@ -133,11 +133,11 @@ end)
 UnregisterEventCallback("UNIT_HEALTH", callbackID)
 
 -- Unit-specific event registration
-RegisterUnitEventCallback("UNIT_HEALTH", "player", function(unit)
+RegisterUnitEventCallback("UNIT_HEALTH", function(unit)
     print("Player health changed to: " .. UnitHealth("player"))
-end)
+end, "player")
 
-UnregisterUnitEventCallback("UNIT_HEALTH", "player", callbackID)
+UnregisterUnitEventCallback("UNIT_HEALTH", callbackID, "player")
 ```
 
 **Unit Tokens**:

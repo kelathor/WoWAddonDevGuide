@@ -180,10 +180,10 @@ local function OnPlayerHealthChanged(unit, ...)
 end
 
 -- Only fires for "player" unit
-RegisterUnitEventCallback("player", "UNIT_HEALTH", OnPlayerHealthChanged)
+RegisterUnitEventCallback("UNIT_HEALTH", OnPlayerHealthChanged, "player")
 
 -- Unregister when done
-UnregisterUnitEventCallback("player", "UNIT_HEALTH", OnPlayerHealthChanged)
+UnregisterUnitEventCallback("UNIT_HEALTH", OnPlayerHealthChanged, "player")
 ```
 
 ### Multiple Callbacks
@@ -668,9 +668,9 @@ RegisterEventCallback("UNIT_HEALTH", function(unit, ...)
 end)
 
 -- Good: Only receives player health changes
-RegisterUnitEventCallback("player", "UNIT_HEALTH", function(unit, ...)
+RegisterUnitEventCallback("UNIT_HEALTH", function(unit, ...)
     -- Process (always "player")
-end)
+end, "player")
 ```
 
 ## Event Testing and Debugging

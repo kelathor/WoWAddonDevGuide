@@ -285,16 +285,16 @@ end)
 UnregisterEventCallback("PLAYER_ENTERING_WORLD", callbackID)
 
 -- Unit-specific callbacks (more efficient for unit events)
-RegisterUnitEventCallback("player", "UNIT_HEALTH", function(unit, ...)
+RegisterUnitEventCallback("UNIT_HEALTH", function(unit, ...)
     local health = UnitHealth(unit)
     local maxHealth = UnitHealthMax(unit)
     print(format("Player health: %d/%d", health, maxHealth))
-end)
+end, "player")
 
 -- Multiple units
-RegisterUnitEventCallback("target", "UNIT_AURA", function(unit, updateInfo)
+RegisterUnitEventCallback("UNIT_AURA", function(unit, updateInfo)
     -- Handle target aura changes
-end)
+end, "target")
 ```
 
 **Benefits of Callback Pattern:**

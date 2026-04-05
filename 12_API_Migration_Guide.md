@@ -2032,8 +2032,8 @@ C_WarbandScene.SetWarbandSceneState(state)
 **New C_EncodingUtil Namespace (MAJOR ADDITION):**
 ```lua
 -- Compression
-local compressed = C_EncodingUtil.CompressData(data)
-local decompressed = C_EncodingUtil.DecompressData(compressed)
+local compressed = C_EncodingUtil.CompressString(data)
+local decompressed = C_EncodingUtil.DecompressString(compressed)
 
 -- Base64 encoding
 local encoded = C_EncodingUtil.EncodeBase64(data)
@@ -2044,12 +2044,12 @@ local hexString = C_EncodingUtil.EncodeHex(data)
 local rawData = C_EncodingUtil.DecodeHex(hexString)
 
 -- JSON serialization (HUGE for addon communication!)
-local jsonString = C_EncodingUtil.EncodeJSON(luaTable)
-local luaTable = C_EncodingUtil.DecodeJSON(jsonString)
+local jsonString = C_EncodingUtil.SerializeJSON(luaTable)
+local luaTable = C_EncodingUtil.DeserializeJSON(jsonString)
 
 -- CBOR binary serialization (compact)
-local cborData = C_EncodingUtil.EncodeCBOR(luaTable)
-local luaTable = C_EncodingUtil.DecodeCBOR(cborData)
+local cborData = C_EncodingUtil.SerializeCBOR(luaTable)
+local luaTable = C_EncodingUtil.DeserializeCBOR(cborData)
 ```
 
 **Color Override System:**
