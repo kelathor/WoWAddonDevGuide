@@ -550,7 +550,7 @@ end
 
 **Custom Map Pin:**
 ```lua
--- Define pin mixin
+-- 1. Define the pin mixin (attached to frames acquired from the pool).
 MyAddonMapPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
 function MyAddonMapPinMixin:OnLoad()
@@ -563,7 +563,20 @@ function MyAddonMapPinMixin:OnAcquired(data)
     self:SetPosition(data.x, data.y)
 end
 
--- Data provider
+-- 2. Create a pin pool and register it under a unique template name that
+--    WorldMapFrame will recognize when AcquirePin("MyAddonMapPinTemplate", ...)
+--    is called. CreateUnsecuredRegionPoolInstance is preferred on 11.x+;
+--    fall back to CreateFramePool for older clients.
+local pinPool
+if CreateUnsecuredRegionPoolInstance then
+    pinPool = CreateUnsecuredRegionPoolInstance("MyAddonMapPinTemplate")
+else
+    pinPool = CreateFramePool("FRAME", nil, "MyAddonMapPinTemplate")
+end
+WorldMapFrame.pinPools["MyAddonMapPinTemplate"] = pinPool
+
+-- 3. Data provider — WorldMapFrame drives RefreshAllData / RemoveAllData /
+--    OnMapChanged on registered providers; no hooksecurefunc needed.
 MyAddonDataProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
 
 function MyAddonDataProviderMixin:OnAdded()
@@ -571,15 +584,25 @@ function MyAddonDataProviderMixin:OnAdded()
     self:GetMap():RegisterCallback("SetFocusedQuestID", self.OnQuestChanged, self)
 end
 
+function MyAddonDataProviderMixin:RemoveAllData()
+    self:GetMap():RemoveAllPinsByTemplate("MyAddonMapPinTemplate")
+end
+
 function MyAddonDataProviderMixin:RefreshAllData()
     self:RemoveAllData()
-
-    -- Add pins
     for i, location in ipairs(myLocations) do
         self:GetMap():AcquirePin("MyAddonMapPinTemplate", location)
     end
 end
+
+-- 4. Register the provider with the world map. WorldMapFrame will then
+--    invoke RefreshAllData / OnMapChanged / OnShow etc. on your provider.
+WorldMapFrame:AddDataProvider(CreateFromMixins(MyAddonDataProviderMixin))
 ```
+
+This is the standard pattern used by the widely-deployed HereBeDragons-Pins-2.0 library (the backend for HandyNotes and its plugins). `AddDataProvider` + `AcquirePin` against a pre-registered pool works reliably for plain map-pin addons.
+
+> **Note on map canvas taint.** The pin system above is not inherently tainting. Map-canvas taint issues you may have read about typically arise when an addon ALSO invokes quest-tracking / panel APIs (e.g. `C_QuestLog.AddWorldQuestWatch`, `ShowUIPanel(WorldMapFrame)`, `WorldMapFrame:SetMapID`) from click handlers, whose resulting C++ events get attributed to the addon and taint the map context that pins are refreshed in. See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for taint workarounds specific to quest-tracking interactions.
 
 ### Minimap Button
 
