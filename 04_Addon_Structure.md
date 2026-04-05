@@ -1066,10 +1066,12 @@ if not IsAddOnLoaded("MyAddon_Options") then
     end
 end
 
--- Check if load-on-demand
-local _, _, _, loadOnDemand = GetAddOnInfo("MyAddon_Options")
-if loadOnDemand then
-    print("This is a load-on-demand addon")
+-- Check if addon is loadable
+local _, _, _, loadable, reason = C_AddOns.GetAddOnInfo("MyAddon_Options")
+if loadable then
+    print("This addon can be loaded")
+elseif reason then
+    print("Cannot load: " .. reason)
 end
 ```
 
