@@ -1429,7 +1429,9 @@ function HousingMonitor:GetEditorModeName()
     return "None"
 end
 
-_G["HousingMonitor"] = HousingMonitor
+-- Access from other files via addon namespace instead of globals:
+-- local ADDON_NAME, ns = ...
+-- ns.HousingMonitor = HousingMonitor
 ```
 
 ### Example 4: Decor Placement Helper
@@ -1546,7 +1548,8 @@ function DyeHelper:ApplyDyeToAllSlots(dyeColorID)
     return true
 end
 
-_G["DyeHelper"] = DyeHelper
+-- Access from other files via addon namespace instead of globals:
+-- ns.DyeHelper = DyeHelper
 ```
 
 ### Example 6: Neighborhood Visitor Counter
@@ -1597,7 +1600,8 @@ function NeighborhoodTracker:IsInOwnNeighborhood()
            C_HousingNeighborhood.IsNeighborhoodManager()
 end
 
-_G["NeighborhoodTracker"] = NeighborhoodTracker
+-- Access from other files via addon namespace instead of globals:
+-- ns.NeighborhoodTracker = NeighborhoodTracker
 ```
 
 ---
