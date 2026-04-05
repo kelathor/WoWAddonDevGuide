@@ -1471,9 +1471,11 @@ local function UpdateTextureHealthBar(unit)
 end
 ```
 
-### Pattern 5: Platynator's issecretvalue Guard (Real-World Example)
+### Pattern 5: Secret-Safe Absorb Text Display
 
-From Platynator's AbsorbText.lua:
+Display absorb values that may be secret during combat. The secret check must happen
+**before** any Lua arithmetic, concatenation, or function calls on the value:
+
 ```lua
 function addonTable.Display.AbsorbTextMixin:UpdateText()
     if UnitIsDeadOrGhost(self.unit) then
@@ -1481,13 +1483,15 @@ function addonTable.Display.AbsorbTextMixin:UpdateText()
         self.text:SetAlpha(0)
     else
         local raw = UnitGetTotalAbsorbs(self.unit)
-        local absolute = (AbbreviateNumbersAlt or AbbreviateNumbers)(raw)
-        self.text:SetText("+" .. absolute)
         if issecretvalue and issecretvalue(raw) then
-            -- Use SetAlpha with the secret value directly
-            -- StatusBar-like behavior handles it at C++ level
+            -- Secret: use SetFormattedText which handles secrets at C++ level
+            self.text:SetFormattedText("+%d", raw)
+            -- SetAlpha accepts secret values natively
             self.text:SetAlpha(raw)
         else
+            -- Not secret: safe to use Lua functions on the value
+            local absolute = (AbbreviateNumbersAlt or AbbreviateNumbers)(raw)
+            self.text:SetText("+" .. absolute)
             self.text:SetAlpha(raw > 0 and 1 or 0)
         end
     end
