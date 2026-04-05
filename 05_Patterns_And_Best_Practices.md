@@ -1288,7 +1288,7 @@ end
 ### Best Practices for Secret Values
 
 1. **Check before using**: Always check `issecretvalue()` before using values for automation
-2. **Scrub tables**: Use `scrubsecretvalues()` when processing data from multiple sources
+2. **Scrub tables**: `scrubsecretvalues()` is varargs-in/varargs-out — iterate the table and replace each field with `scrubsecretvalues(value)`, recursing into nested tables
 3. **UI vs Logic**: Separate display code from decision-making code
 4. **Graceful degradation**: Have fallbacks when values are secret
 5. **Test thoroughly**: Use the debug CVars to test both restricted and unrestricted states
