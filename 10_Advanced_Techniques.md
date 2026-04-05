@@ -1591,11 +1591,10 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ENCOUNTER_START")
 frame:RegisterEvent("ENCOUNTER_END")
 
-frame:SetScript("OnEvent", function(self, event, encounterID, encounterName, difficultyID, groupSize)
+frame:SetScript("OnEvent", function(self, event, encounterID, encounterName, difficultyID, groupSize, success)
     if event == "ENCOUNTER_START" then
         MyAddon:OnEncounterStart(encounterID, encounterName, difficultyID)
     elseif event == "ENCOUNTER_END" then
-        local _, _, _, _, success = ...
         MyAddon:OnEncounterEnd(encounterID, success == 1)
     end
 end)
@@ -1967,14 +1966,6 @@ function ns:GetItemCount(itemID)
     self.cache.items[itemID] = count
     return count
 end
-
-_G.MyAdvancedAddon = {
-    [1] = E,
-    [2] = L,
-    [3] = V,
-    [4] = P,
-    [5] = G,
-}
 ```
 
 ---

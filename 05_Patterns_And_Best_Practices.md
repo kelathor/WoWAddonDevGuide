@@ -1734,10 +1734,7 @@ local value = condition and trueValue or falseValue
 -- But beware: if trueValue is false/nil, this breaks!
 local value = someBoolean and false or "default"  -- WRONG: always returns "default"
 
--- Safe version for all cases:
-local value = condition and trueValue or (not condition and falseValue)
-
--- Or just use if/else
+-- There is no safe one-liner for all cases. Use if/else instead:
 local value
 if condition then
     value = trueValue
