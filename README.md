@@ -1,4 +1,4 @@
-# World of Warcraft Addon Development - Complete Knowledge Base
+# World of Warcraft Addon Development<br>Complete Knowledge Base
 
 ## 📚 Overview
 <!-- CLAUDE_SKIP_START -->
