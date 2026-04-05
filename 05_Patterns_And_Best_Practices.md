@@ -1202,31 +1202,30 @@ end
 
 ### Using Curve Objects for UI Display
 
+Curves are created via the `C_CurveUtil` namespace and use `AddPoint(x, y)` to define data points.
+Blizzard provides pre-built curves in `CurveConstants` (e.g., `CurveConstants.ScaleTo100`).
+
 ```lua
--- For health bars and similar UI elements, use Curve objects
-local function CreateHealthBar(parent)
-    local healthBar = CreateFrame("StatusBar", nil, parent)
+-- Create a curve that maps percentage [0, 1] to display range [0, 100]
+local healthCurve = C_CurveUtil.CreateCurve()
+healthCurve:SetType(Enum.LuaCurveType.Linear)
+healthCurve:AddPoint(0.0, 0)
+healthCurve:AddPoint(1.0, 100)
 
-    -- Health curve provides smooth animation without exposing exact values
-    local healthCurve = CreateCurve()
+-- Evaluate the curve at a given input
+local displayValue = healthCurve:Evaluate(0.75)  -- Returns 75
 
-    healthBar:SetScript("OnUpdate", function(self, elapsed)
-        -- Curve automatically handles secret value restrictions
-        local displayValue = healthCurve:GetCurrentValue()
-        self:SetValue(displayValue)
-    end)
+-- Or use Blizzard's pre-built curves with UnitHealthPercent:
+-- UnitHealthPercent("player", false, CurveConstants.ScaleTo100)
 
-    return healthBar, healthCurve
-end
+-- ColorCurve for color transitions (uses AddPoint with ColorMixin)
+local colorCurve = C_CurveUtil.CreateColorCurve()
+colorCurve:AddPoint(0.0, CreateColor(1, 0, 0, 1))  -- Red at 0%
+colorCurve:AddPoint(1.0, CreateColor(0, 1, 0, 1))  -- Green at 100%
+local color = colorCurve:Evaluate(0.5)  -- Blended color at 50%
 
--- ColorCurve for smooth color transitions
-local colorCurve = CreateColorCurve()
-colorCurve:SetStartColor(1, 0, 0, 1)  -- Red
-colorCurve:SetEndColor(0, 1, 0, 1)    -- Green
-colorCurve:SetDuration(1.0)
-
--- Duration objects for timing
-local duration = CreateDuration(5.0)  -- 5 second duration
+-- Duration objects for timing (no constructor arguments)
+local duration = C_DurationUtil.CreateDuration()
 ```
 
 ### StatusBar Floating-Point Precision
