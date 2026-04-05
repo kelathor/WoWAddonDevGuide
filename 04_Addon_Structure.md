@@ -720,22 +720,19 @@ UI\MainFrame.xml          # Frame definition
 -- File load time (when file is parsed)
 local MyAddon = {}
 
--- Use ADDON_LOADED to detect when your addon's files have loaded
+-- Use ADDON_LOADED and PLAYER_LOGIN with a single event handler
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(self, event, addonName)
-    if addonName == "MyAddon" then
+    if event == "ADDON_LOADED" and addonName == "MyAddon" then
         -- This addon just loaded
         -- Saved variables are definitely available
-    end
-end)
-
--- Fires when player enters world
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(self, event)
-    if event == "PLAYER_LOGIN" then
+        self:UnregisterEvent("ADDON_LOADED")
+    elseif event == "PLAYER_LOGIN" then
         -- Player is fully loaded
         -- All game data available
+        self:UnregisterEvent("PLAYER_LOGIN")
     end
 end)
 ```
