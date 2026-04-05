@@ -100,8 +100,8 @@ Cooldowns and durations often return secret values during encounters. Use the ne
 
 ```lua
 -- Traditional approach (may fail with secrets)
-local start, duration = GetSpellCooldown(spellID)
--- If secrets are active, start and duration may be secret values!
+local cooldownInfo = C_Spell.GetSpellCooldown(spellID)
+-- cooldownInfo.startTime and cooldownInfo.duration may be secret values!
 
 -- Secret-safe approach using Duration objects
 local duration = C_DurationUtil.CreateDuration()
