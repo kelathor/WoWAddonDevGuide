@@ -1,6 +1,103 @@
 <\!-- CLAUDE_SKIP_START -->
 # WoW Addon Development Knowledge Base - Update Log
 
+## Version 3.2 - 2026-04-05
+
+### Audit: 40-item verified audit + tooltip/map-canvas guidance reground
+
+**Summary:**
+Executed a 40-item audit of the KB against Blizzard 12.0.0 API documentation files, the wow-ui-source tree, warcraft.wiki.gg, and several real-world addons (Broker_WorldQuests, ArkInventory, HandyNotes/HereBeDragons-Pins-2.0). Corrected fabricated API entries, API signature/semantics errors, and guidance that turned out to be addon-specific folklore rather than universal best practice. Also refreshed README External Links and Learning Path and audited QUICK_START_GUIDE end-to-end.
+
+**Files Updated:**
+- [01_API_Reference.md](01_API_Reference.md) - `C_RestrictedActions` fabrications; migration-table cleanup
+- [02_Event_System.md](02_Event_System.md) - `UnitHealth` `issecretvalue()` guard; `C_EventUtils.IsEventValid` as primary version-safe registration
+- [04_Addon_Structure.md](04_Addon_Structure.md) - `SavedVariablesMachine` path corrected; 12.0.1 marked current patch
+- [05_Patterns_And_Best_Practices.md](05_Patterns_And_Best_Practices.md) - `scrubsecretvalues` example and bullet; mixin PascalCase convention; `_Intrinsic` method-suffix; `IsAddOnRestrictionActive(type)` required-arg; `tinsert/tremove/wipe` global-alias note
+- [07_Blizzard_UI_Examples.md](07_Blizzard_UI_Examples.md) - `C_ActionBar.GetActionUseCount`/`IsUsableAction` preferred; Map Pin example completed with pool registration + grounded taint note
+- [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md) - Fabricated `C_ActionBar` namespace entries removed
+- [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md) - AceBucket `UNIT_HEALTH` secret-values caveat; `RegisterFrameEventAndCallback` pattern documented; bare `print()` calls replaced
+- [10_Advanced_Techniques.md](10_Advanced_Techniques.md) - `string.concat` removed (fabricated); `GetSpellCooldown` → `C_Spell.GetSpellCooldown` migration; `scrubsecretvalues` signature + Safe Serialization fix; `C_RestrictedActions` fabrications replaced
+- [11_Housing_System_Guide.md](11_Housing_System_Guide.md) - Example 2 routed through `Log()` helper; Example 3 reverse-lookup precomputed
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - GameTooltip taint guidance reframed (see below); fabricated `C_ActionBar.*` migration rows removed
+- [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) - Fabricated `C_ActionBar.GetActionInfo`/`PickupAction` rows removed
+- [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) - `GetDurationObject`/`SetAlphaFromCurve` fabrications replaced with `C_Spell.GetSpellCooldownDuration` + `EvaluateRemainingDuration`; `CooldownFrame_Set` restriction inheritance documented; `SetCooldown*` label clarified to "RESTRICTED (tainted+secret)"; `ShowUIPanel`/`Show()` trade-off documented honestly
+- [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Fabricated `C_ActionBar` migration entries removed; `C_DamageMeter` workaround cross-ref added
+- [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) - End-to-end audit: version label 12.0.0 → 12.0.1; duplicate list numbering fixed; migration table accuracy; `C_DamageMeter` "unusable" softened; External Resources refreshed; `WTF/SavedVariables/` path added; semicolons stripped from tutorial Lua
+- [README.md](README.md) - External Links refreshed (warcraft.wiki.gg, Gethe mirror, verified WoWUIDev Discord, CurseForge/Wago/WoWInterface URLs); Learning Path surfaces `12a_Secret_Safe_APIs.md` in Week 1; `09a_Ace3_Library_Guide.md` linked in Week 4; Reference & Specialized Topics subsection added
+- [KNOWLEDGE_BASE_UPDATE_LOG.md](KNOWLEDGE_BASE_UPDATE_LOG.md) - `string.concat` removed from the Version 1.0 "Lua extensions" bullet (fabrication)
+
+**Content: Fabricated API removals (all verified against `Blizzard_APIDocumentationGenerated/*.lua`):**
+
+1. **`GetActionInfo()` global still exists** -- The KB claimed `GetActionInfo()` moved to `C_ActionBar.GetActionInfo()` in 12.0.0. `C_ActionBar.GetActionInfo` does not exist anywhere in `ActionBarFrameDocumentation.lua`, and Blizzard's own `Blizzard_ActionBar/Shared/ActionButton.lua` calls the global 10+ times. The migration never happened. Removed the false migration row and corrected all teaching examples across 8 files.
+
+2. **`C_ActionBar.PickupAction` / `PlaceAction` fabricated** -- Both globals are live and used by Blizzard's `ActionButton.lua`; neither exists under `C_ActionBar`. Removed the fabricated entries; the closest real C_ActionBar equivalent is `PutActionInSlot(slotID)`.
+
+3. **`GetActionCount` / `ActionHasRange` renamed, not same-name** -- Globals are deprecation shims (gated by `loadDeprecationFallbacks` CVar). The C_ActionBar replacements are `GetActionUseCount` and `HasRangeRequirements` respectively (not `GetActionCount`/`ActionHasRange`). Corrected all references.
+
+4. **`C_ActionBar.GetCurrentPage` pure fabrication** -- Function does not exist anywhere in 12.0.0. Replaced with `C_ActionBar.GetActionBarPage` (which Blizzard uses in `MainActionBar.lua`).
+
+5. **`C_RestrictedActions` namespace fabrications** -- Removed `IsActionRestricted`, `GetRestrictionReason`, `CanPerformAction`, `IsSecureContext`, `IsInCombatLockdown`, `IsRestricted`, `IsCombatRestricted` -- none exist. Real namespace contains exactly 3 functions: `CheckAllowProtectedFunctions(object, silent)`, `GetAddOnRestrictionState(type)`, `IsAddOnRestrictionActive(type)`.
+
+6. **`string.concat(...)` fabricated** -- Described as "safe string concatenation for secrets". Does not exist in the Lua string library, `FrameScriptDocumentation.lua`, Blizzard UI source, or any addon. Replaced with an `issecretvalue()` guard pattern.
+
+7. **`child.Cooldown:GetDurationObject()` fabricated** -- Cooldown frames do not expose this method. Replaced with `C_CooldownViewer.GetCooldownViewerCooldownInfo(child.cooldownID)` → `.spellID` → `C_Spell.GetSpellCooldownDuration(spellID)`.
+
+8. **`child:SetAlphaFromCurve()` fabricated** -- Zero matches in 12.0.0 source. Replaced with `frame:SetAlpha(durationObj:EvaluateRemainingDuration(curve))` using the real `LuaDurationObject` API.
+
+9. **`C_DamageMeter` "unusable" claims softened** -- Fixed at 3 sites (README, QUICK_START, 00_MASTER_PROMPT); API is secret-protected during combat but workarounds exist (documented in 12a_Secret_Safe_APIs.md).
+
+**Content: Correctness fixes from empirical verification:**
+
+10. **`scrubsecretvalues` is varargs-in/varargs-out** -- Confirmed from `FrameScriptDocumentation.lua` lines 314-329 (`StrideIndex = 1` on both arguments and returns). Passing a table returns the table reference unchanged. Fixed the function's signature documentation and all three example sites (per-field iteration for tables, recursive helper for nested tables).
+
+11. **Global `GetSpellCooldown(spellID)` removed in 11.0.0** -- Replaced with `C_Spell.GetSpellCooldown(spellIdentifier)` which returns a single `SpellCooldownInfo` table (fields: `startTime`, `duration`, `isEnabled`, `modRate`).
+
+12. **`UnitHealth`/`UnitHealthMax` + `%d` format crashes in combat** -- Added `issecretvalue()` guard to the Unit Event Callbacks example with a safe `"???/???"` fallback.
+
+13. **`C_RestrictedActions.IsAddOnRestrictionActive()` requires `type` argument** -- Non-nilable `Enum.AddOnRestrictionType` enum (values: Combat, Encounter, ChallengeMode, PvPMatch, Map). Fixed the example helper to accept and forward the type.
+
+14. **CooldownFrame utility functions inherit `SetCooldown` restrictions** -- `CooldownFrame_Set` and `CooldownFrame_SetDisplayAsPercentage` both call `self:SetCooldown(...)` internally (`Blizzard_FrameXMLUtil/Cooldown.lua:5, :18`), so they inherit the 12.0.1+ secret-value restrictions. Added warnings to both rows.
+
+15. **`SetCooldown*` "RESTRICTED (12.0.1)" label clarified** -- The label implied an unconditional block. Changed to "RESTRICTED (tainted+secret)" so readers see the two required conditions at a glance.
+
+**Content: Documentation accuracy:**
+
+16. **Mixin naming: Blizzard uses PascalCase universally** -- The "private methods use lowercase" claim was wrong. Verified 123 PascalCase methods + 0 lowercase in `Blizzard_ActionBar/Shared/ActionButton.lua`. Updated the bullet to recommend file-local functions for true privacy.
+
+17. **`_Intrinsic` is a method suffix, not a mixin suffix** -- Correct pattern is `MixinName:OnLoad_Intrinsic()` / `OnMouseDown_Intrinsic()` etc., not `MixinName_Intrinsic`. Examples: `DropdownButtonMixin`, `EventButtonMixin`, `EventEditBoxMixin`.
+
+18. **`tinsert`/`tremove`/`wipe` are WoW global aliases** -- Via `Blizzard_SharedXMLBase/Compat.lua`. Both `local tinsert = table.insert` and `local tinsert = tinsert` are equivalent; Blizzard's own source uses the former style.
+
+19. **`C_EventUtils.IsEventValid` is the modern version-safe pattern** -- `pcall(RegisterEvent)` silently swallows typos. Promoted `IsEventValid` to primary and demoted `pcall` to a labeled legacy fallback.
+
+20. **`SavedVariablesMachine` storage path corrected** -- Previously (incorrectly) said `WTF/Config.wtf` area. Verified empirically: machine-scope saved variables live at `WTF/SavedVariables/AddonName.lua`.
+
+21. **12.0.1 is the current live patch** -- Released 2026-02-10. Updated the Interface Versions table and the version label throughout.
+
+22. **Housing example debug output** -- Example 2 routed through a `Log()` helper showing the one-line swap point for a real debug-frame wire-up. Example 3's `Enum.HouseEditorMode` reverse-lookup precomputed once at load instead of rebuilt on every event fire.
+
+23. **Ace3 library examples: bare `print()` removed** -- Replaced with local-assignment + value comment forms in the AceDB default-access, ScheduleTimer, and Deserialize demos.
+
+24. **`EventRegistry:RegisterFrameEventAndCallback` pattern documented** -- Added to the Ace3 guide's EventRegistry section; this is the modern idiomatic way to register for frame events without managing your own frame (used throughout 12.0.0 core UI).
+
+**Content: Tooltip & Map Canvas guidance reground in real addon behavior:**
+
+25. **GameTooltip taint workaround scope corrected** -- Reviewed tooltip handling in Broker_WorldQuests, ArkInventory, HandyNotes. `ItemTooltip:Hide()` after `SetOwner()` is a TARGETED workaround needed only when invoking helpers that touch `EmbeddedItemTooltip`/`insertedFrames` (e.g. `GameTooltip_AddQuestRewardsToTooltip`, `GameTooltip_ShowProgressBar`). Plain text tooltips (`SetOwner`/`SetText`/`AddLine`/`Show`) don't need it -- HandyNotes and ArkInventory use the shared GameTooltip successfully without it. Added the BWQ-verified complementary patterns: `pcall` wrap around `GameTooltip_AddQuestRewardsToTooltip` and a second `ItemTooltip:Hide()` after the helper call.
+
+26. **Private tooltips repositioned as scanning-primary** -- Removed the "Definitive Fix for GameTooltip Taint" framing. Private tooltips are primarily for SCANNING (read line text via `SetHyperlink`/`SetQuestLogItem`, never shown). Using them for display is a niche trade-off, not a universal fix.
+
+27. **Map canvas taint rules corrected** -- Reviewed HandyNotes + HereBeDragons-Pins-2.0 (the canonical map-pin library). The standard pin pattern (`MapCanvasDataProviderMixin` + `AcquirePin` against a pool pre-registered at `WorldMapFrame.pinPools[templateName]` + `WorldMapFrame:AddDataProvider(provider)`) is NOT inherently tainting. Real taint arises from quest-tracking / panel API calls from click handlers, not from the pin system itself. Completed the Map Pin example with the missing pool registration and data-provider wiring; added an honest taint note with cross-reference.
+
+**Content: README & QUICK_START refresh:**
+
+28. **README External Links refreshed** -- Replaced stale `wowpedia.fandom.com` with `warcraft.wiki.gg` (active since the 2023 community migration). Added the `Gethe/wow-ui-source` GitHub mirror (online equivalent of the local Blizzard UI source tree). Filled in the verified `WoWUIDev Discord` invite, added WoWInterface, URLs for CurseForge and Wago.io. Grouped into Documentation / Community / Hosting subsections with proper markdown hyperlinks.
+
+29. **README Learning Path refreshed** -- Moved `12a_Secret_Safe_APIs.md` to Week 1 (Secret Values is the biggest 12.0.0 breaking change -- new addon devs hit it on day one). Linked `09a_Ace3_Library_Guide.md` in Week 4 alongside `09_Addon_Libraries_Guide.md`. Added a Reference & Specialized Topics subsection for `01_API_Reference.md`, `11_Housing_System_Guide.md`, `13_Cooldown_Viewer_Guide.md`. Marked cross-client compatibility as optional.
+
+30. **QUICK_START_GUIDE end-to-end audit** -- Version label synced (12.0.0 → 12.0.1, matches 120001 interface); migration-table header accuracy ("Deprecated" not "Removed"); duplicate `12.` numbering fixed in Documentation Structure; `C_DamageMeter` comment softened with cross-ref; External Resources refreshed to match the updated README; `WTF/SavedVariables/` path added; `(NEW)` label removed from Cooldown Viewer Guide entry; tutorial `## Interface:` updated to 120001; trailing semicolons stripped from tutorial and quick-reference Lua to match community convention.
+
+---
+
 ## Version 3.1 - 2026-04-03
 
 ### Updated: Cooldown Viewer Guide with CooldownManagerCentered Analysis Findings
