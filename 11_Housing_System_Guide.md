@@ -1317,9 +1317,16 @@ end
 
 ### Example 2: List Placed Decor with Budget Info
 ```lua
+-- Route all output through a single Log() helper. In a real addon, swap
+-- the body for an append to your scrollable debug EditBox (see the
+-- Debug Output pattern) — no other lines in this example need to change.
+local function Log(msg)
+    print(msg)  -- replace with: MyAddonDebugFrame:AppendLine(msg)
+end
+
 local function ShowDecorBudgetStatus()
     if not C_Housing.IsInsideHouseOrPlot() then
-        print("Not in a house or plot!")
+        Log("Not in a house or plot!")
         return
     end
 
@@ -1327,17 +1334,17 @@ local function ShowDecorBudgetStatus()
     local spent = C_HousingDecor.GetSpentPlacementBudget()
     local max = C_HousingDecor.GetMaxPlacementBudget()
 
-    print(string.format("Decor: %d items placed", numPlaced))
-    print(string.format("Budget: %d / %d used", spent, max))
+    Log(string.format("Decor: %d items placed", numPlaced))
+    Log(string.format("Budget: %d / %d used", spent, max))
 
     -- Get all placed decor (be careful - this can be expensive!)
     local allDecor = C_HousingDecor.GetAllPlacedDecor()
     if allDecor then
-        print("Placed items:")
+        Log("Placed items:")
         for i, entry in ipairs(allDecor) do
-            print(string.format("  %d. %s", i, entry.name))
+            Log(string.format("  %d. %s", i, entry.name))
             if i >= 10 then
-                print(string.format("  ... and %d more", #allDecor - 10))
+                Log(string.format("  ... and %d more", #allDecor - 10))
                 break
             end
         end
