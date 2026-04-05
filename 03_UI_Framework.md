@@ -1751,7 +1751,4 @@ All paths relative to: `D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-so
 
 ---
 
-**Version:** 2.0 - Updated for WoW 12.0.0 (Midnight)
-**Last Updated:** 2026-01-20
-
 <!-- CLAUDE_SKIP_END -->

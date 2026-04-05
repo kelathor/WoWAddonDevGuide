@@ -3498,8 +3498,4 @@ You can keep your addons working across expansions with minimal effort.
 
 ---
 
-**Version:** 2.5 - Added Map Canvas Taint section, Quest Reward Data Loading patterns, C_TaskQuest behavior notes
-**Last Updated:** 2026-03-08
-**Coverage:** API changes from WoW 9.0 through 12.0.0
-
 <!-- CLAUDE_SKIP_END -->

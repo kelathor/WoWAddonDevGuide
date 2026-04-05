@@ -2031,8 +2031,4 @@ end
 
 ---
 
-**Version:** 2.0 - Based on WoW 12.0.0 (Midnight)
-**Last Updated:** 2026-01-20
-**Source Analysis:** ArkInventory, ElvUI, ZygorGuidesViewer, Blizzard API Documentation
-
 <!-- CLAUDE_SKIP_END -->

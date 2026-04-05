@@ -1763,4 +1763,3 @@ Common result codes:
 
 ---
 
-*Last Updated: Patch 12.0.0 (Midnight)*

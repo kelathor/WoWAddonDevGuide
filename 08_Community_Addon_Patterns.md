@@ -1440,9 +1440,4 @@ _G.APICompat = APICompat
 
 ---
 
-**Version:** 2.0 - Updated for WoW 12.0.0 (Midnight)
-**Last Updated:** 2026-01-20
-**Community Patterns:** Ace3, LibStub, and common addon frameworks
-**Breaking Changes:** Action bar APIs, Transmog APIs, Void Storage removal
-
 <!-- CLAUDE_SKIP_END -->

@@ -380,8 +380,4 @@ After reading this master prompt, Claude should:
 
 ---
 
-**Version**: 2.0 - Based on WoW 12.0.0 (Midnight)
-**Last Updated**: 2026-01-20
-**Source Files Analyzed**: 3,417+ Blizzard UI files + 21,514+ community addon files
-**Major Changes**: 12.0 "Addon Apocalypse" security updates, Secret Values system, new official APIs
 <!-- CLAUDE_SKIP_END -->

@@ -955,19 +955,6 @@ Core.lua
 9. **Consider native APIs** - C_EncodingUtil, table.create(), Settings API
 10. **Check 12.0.0 compatibility** - Test libraries before Midnight launch
 
-### Next Steps
-
-1. **Study popular addons** - See how they use libraries
-2. **Try Ace3** - Start with AceAddon + AceDB + AceConfig
-3. **Add LibDataBroker** - Create a minimap icon
-4. **Explore specialized libraries** - Find ones for your needs
-5. **Keep libraries updated** - Check for new versions
-6. **Evaluate native alternatives** - Use C_EncodingUtil for compression/JSON in new code
-
 ---
 
-**Version:** 2.0 - Updated for WoW 12.0.0 (Midnight)
-**Last Updated:** 2026-01-20
-**Libraries Documented:** 20+ popular WoW addon libraries
-**New Sections:** Native API Alternatives, Housing Libraries, Library Compatibility Notes
 <!-- CLAUDE_SKIP_END -->

@@ -353,9 +353,4 @@ WTF\Errors\
 
 **Happy coding!**
 
----
-
-**Version:** 2.0 - Based on WoW 12.0.0 (Midnight)
-**Interface Version:** 120000
-**Last Updated:** 2026-01-20
 <!-- CLAUDE_SKIP_END -->

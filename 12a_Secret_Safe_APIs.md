@@ -2159,8 +2159,3 @@ frame:SetAlpha(alpha)  -- SetAlpha accepts the result natively
 
 ---
 
-*Last Updated: 2026-04-02*
-*WoW Version: 12.0.0 / 12.0.1 (Midnight)*
-*Added: Comprehensive aura data secret values documentation (all fields secret except auraInstanceID), C_Spell.GetSpellInfo spell-name-lookup removal, pre-combat caching limitations, practical implications table for aura addon developers*
-*12.0.1 Updates: SetCooldown restricted (use SetCooldownFromDurationObject only), format precision specifiers restricted, UnitCreatureID/GetEffectiveAlpha/IsDesaturated return nil, new duration APIs (LoC, Totem), isActive/isEnabled/maxCharges non-secret, private aura APIs combat-restricted*
-*Added: CooldownViewer frame taint pitfalls section (frame table nil-writes, child mixin hooks, implicit reparenting protection, texture FileID secrets, alpha wrapper technique, non-secret cooldown fields, C_CurveUtil duration evaluation)*

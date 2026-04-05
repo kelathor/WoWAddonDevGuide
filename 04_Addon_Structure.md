@@ -1913,8 +1913,4 @@ Classic\Features.lua
 
 ---
 
-**Document Version:** 2.0.0
-**Game Version:** 12.0.0 (Midnight)
-**Last Updated:** 2026-01-20
-
 <!-- CLAUDE_SKIP_END -->

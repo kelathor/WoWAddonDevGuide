@@ -1377,16 +1377,4 @@ end
 
 ---
 
-**Version:** 2.0 - Updated for WoW 12.0.0 (Midnight)
-**Last Updated:** 2026-01-20
-**Source:** Blizzard TOC files and common community patterns
-
-### Changes in 2.0:
-- Added `LoadSavedVariablesFirst` TOC directive (11.1.5+)
-- Added `C_EncodingUtil` serialization APIs (11.1.5+)
-- Added `AllowAddOnTableAccess` and `C_AddOns.GetAddOnLocalTable()` (11.1.7+)
-- Added Warband and account-wide data section
-- Documented Void Storage removal (11.2.0)
-- Updated interface version to 120000
-
 <!-- CLAUDE_SKIP_END -->

@@ -1927,7 +1927,4 @@ sortManager:ToggleSortAscending("name")
 
 ---
 
-**Version:** 2.0 - Updated for WoW 12.0.0 (Midnight)
-**Last Updated:** 2026-01-20
-
 <!-- CLAUDE_SKIP_END -->
