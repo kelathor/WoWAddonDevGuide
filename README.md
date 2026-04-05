@@ -284,6 +284,7 @@ WTF\Account\[Account]\[Server]\[Character]\SavedVariables\
 - [ ] Create your first addon (5-minute tutorial)
 - [ ] Read [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md)
 - [ ] Read [04_Addon_Structure.md](04_Addon_Structure.md)
+- [ ] Read [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) — critical 12.0.0 guards
 - [ ] Experiment with slash commands
 
 ### Week 2: UI & Events
@@ -302,7 +303,7 @@ WTF\Account\[Account]\[Server]\[Character]\SavedVariables\
 
 ### Week 4: Advanced
 - [ ] Read [08_Community_Addon_Patterns.md](08_Community_Addon_Patterns.md)
-- [ ] Read [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md)
+- [ ] Read [09_Addon_Libraries_Guide.md](09_Addon_Libraries_Guide.md) and [09a_Ace3_Library_Guide.md](09a_Ace3_Library_Guide.md)
 - [ ] Try Ace3 framework
 - [ ] Create scrolling lists
 - [ ] Implement profiles
@@ -311,11 +312,16 @@ WTF\Account\[Account]\[Server]\[Character]\SavedVariables\
 ### Week 5+: Production-Level
 - [ ] Read [10_Advanced_Techniques.md](10_Advanced_Techniques.md)
 - [ ] Read [12_API_Migration_Guide.md](12_API_Migration_Guide.md)
-- [ ] Implement cross-client compatibility
 - [ ] Add performance profiling
 - [ ] Optimize with event bucketing
 - [ ] Build multi-addon architecture
 - [ ] Learn to migrate addons for new patches
+- [ ] *(Optional)* Implement cross-client compatibility
+
+### Reference & Specialized Topics
+- [01_API_Reference.md](01_API_Reference.md) — API lookup
+- [11_Housing_System_Guide.md](11_Housing_System_Guide.md) — player housing
+- [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) — Cooldown Manager integration
 
 ## 📚 Additional Resources
 
