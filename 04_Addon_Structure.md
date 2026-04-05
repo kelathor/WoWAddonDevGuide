@@ -118,8 +118,8 @@ MyAddon/
 
 | Game Version | Interface Number | Notes |
 |-------------|------------------|-------|
-| Retail 12.0.0 (Midnight) | 120000 | Current expansion |
-| Retail 12.0.1 | 120001 | Future patches |
+| Retail 12.0.0 (Midnight) | 120000 | Expansion launch |
+| Retail 12.0.1 | 120001 | Current patch |
 | TWW 11.2.7 | 110207 | Previous expansion |
 | Classic Cata 4.4.2 | 40402 | Cataclysm Classic |
 | Classic SoD/Era 1.15.8 | 11508 | Season of Discovery / Classic Era |
