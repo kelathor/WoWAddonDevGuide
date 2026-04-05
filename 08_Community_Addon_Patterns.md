@@ -799,16 +799,16 @@ end
 
 -- Handle secret values for boss health
 function BossMod:GetBossHealth(unit)
-    local health = UnitHealth(unit)
-    local maxHealth = UnitHealthMax(unit)
-
-    -- In 12.0, use UnitHealthPercent for more reliable data
-    local percent = UnitHealthPercent and UnitHealthPercent(unit)
-    if percent then
-        return percent  -- Returns 0-100, handles secrets gracefully
+    -- In 12.0+, UnitHealthPercent(unit) returns a 0-1 float without a curve,
+    -- or 0-100 with CurveConstants.ScaleTo100. No issecretvalue guard needed
+    -- when called without a curve (SecretWhenCurveSecret only).
+    if UnitHealthPercent then
+        return UnitHealthPercent(unit, false, CurveConstants.ScaleTo100)  -- Returns 0-100
     end
 
-    -- Fallback for older API
+    -- Fallback for pre-12.0 (UnitHealth/UnitHealthMax are not secret in older clients)
+    local health = UnitHealth(unit)
+    local maxHealth = UnitHealthMax(unit)
     if maxHealth > 0 then
         return (health / maxHealth) * 100
     end
