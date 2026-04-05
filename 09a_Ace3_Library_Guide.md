@@ -527,9 +527,9 @@ local defaults = {
 self.db = LibStub("AceDB-3.0"):New("MyDB", defaults)
 
 -- Accessing any key auto-creates it with defaults:
-print(self.db.profile.bars.someNewBar.width)  -- 200
-print(self.db.profile.bars[1].enabled)        -- true
-print(self.db.profile.bars["special"].height)  -- 20
+local w = self.db.profile.bars.someNewBar.width  -- 200
+local e = self.db.profile.bars[1].enabled        -- true
+local h = self.db.profile.bars["special"].height -- 20
 ```
 
 For non-table values, `["*"]` provides a default return value:
@@ -1001,7 +1001,7 @@ function MyAddon:OnEnable()
     -- Using a function reference with extra arguments
     self:ScheduleTimer(function(greeting)
         -- Note: 'self' is not passed automatically for function refs
-        print(greeting)
+        -- 'greeting' receives "Hello after 5 seconds!" at fire time
     end, 5.0, "Hello after 5 seconds!")
 end
 
@@ -2395,8 +2395,8 @@ Returns `true` followed by the deserialized values, or `false` followed by an er
 ```lua
 local success, data = self:Deserialize(serialized)
 if success then
-    -- data is the original table
-    print(data.name)  -- "TestProfile"
+    -- data is the original table — e.g. data.name == "TestProfile"
+    local name = data.name
 else
     -- data is the error message string
     geterrorhandler()(data)
