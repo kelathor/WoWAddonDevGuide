@@ -1269,12 +1269,15 @@ local function TestSecretValueHandling()
         print("Health is NORMAL:", testValue)
     end
 
-    -- Test table scrubbing
+    -- Test table scrubbing — scrubsecretvalues is varargs-in/varargs-out
+    -- (not in-place), so iterate and replace each field.
     local testTable = {health = UnitHealth("player"), name = "Test"}
     print("Before scrub:", testTable.health)
 
     if scrubsecretvalues then
-        scrubsecretvalues(testTable)
+        for key, value in pairs(testTable) do
+            testTable[key] = scrubsecretvalues(value)
+        end
     end
     print("After scrub:", testTable.health)
 end
