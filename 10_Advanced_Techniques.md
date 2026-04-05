@@ -1794,14 +1794,14 @@ local originalData = { ... }  -- Your data
 local serialized = -- serialize your data to string first
 
 -- Compress using native API (faster than LibCompress)
-local compressed = C_EncodingUtil.CompressData(serialized)
+local compressed = C_EncodingUtil.CompressString(serialized)
 
 -- Decompress
-local decompressed = C_EncodingUtil.DecompressData(compressed)
+local decompressed = C_EncodingUtil.DecompressString(compressed)
 
 -- Base64 encoding (for text-safe storage)
-local encoded = C_EncodingUtil.EncodeToBase64(compressed)
-local decoded = C_EncodingUtil.DecodeFromBase64(encoded)
+local encoded = C_EncodingUtil.EncodeBase64(compressed)
+local decoded = C_EncodingUtil.DecodeBase64(encoded)
 ```
 
 ### Pattern: Optimized Data Processing
