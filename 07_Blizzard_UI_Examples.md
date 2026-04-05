@@ -443,38 +443,34 @@ function MyButton_OnLeave(self)
 end
 ```
 
-**Advanced Tooltip (12.0 Updated):**
+**Advanced Tooltip — Item (12.0 Updated):**
 ```lua
-function ShowItemTooltip(button)
+function ShowItemTooltip(button, itemID)
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
 
-    -- Set item (prefer new API)
-    if C_TooltipInfo and C_TooltipInfo.GetItemByID then
-        local tooltipData = C_TooltipInfo.GetItemByID(itemID)
-        if tooltipData then
-            GameTooltip:ProcessInfo(tooltipData)
-        end
-    else
-        GameTooltip:SetItemByID(itemID)
+    local tooltipData = C_TooltipInfo.GetItemByID(itemID)
+    if tooltipData then
+        GameTooltip:ProcessInfo(tooltipData)
     end
 
-    -- Or set spell
-    if C_TooltipInfo and C_TooltipInfo.GetSpellByID then
-        local tooltipData = C_TooltipInfo.GetSpellByID(spellID)
-        if tooltipData then
-            GameTooltip:ProcessInfo(tooltipData)
-        end
-    else
-        GameTooltip:SetSpellByID(spellID)
-    end
-
-    -- Add custom lines
+    -- Add custom lines after the item info
     GameTooltip:AddLine(" ")  -- Blank line
     GameTooltip:AddDoubleLine("Label:", "Value", nil, nil, nil, 1, 1, 1)
     GameTooltip:AddLine("Red text", 1, 0, 0)
 
-    -- Add texture
-    GameTooltip:AddTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    GameTooltip:Show()
+end
+```
+
+**Advanced Tooltip — Spell (12.0 Updated):**
+```lua
+function ShowSpellTooltip(button, spellID)
+    GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+
+    local tooltipData = C_TooltipInfo.GetSpellByID(spellID)
+    if tooltipData then
+        GameTooltip:ProcessInfo(tooltipData)
+    end
 
     GameTooltip:Show()
 end
