@@ -625,11 +625,10 @@ function MyAddon:OnSettingChanged()
 end
 ```
 
-### Using New Profiler Metrics (12.0+)
+### Simple Function Profiling
 
 ```lua
--- 12.0 introduces C_ScriptProfiler for addon performance analysis
--- Use this to identify bottlenecks
+-- Wrapper to identify performance bottlenecks using debugprofilestop()
 
 local function ProfileFunction(funcName, func)
     return function(...)
