@@ -1650,16 +1650,22 @@ for _, sessionInfo in ipairs(sessions) do
 end
 
 -- Get session by type
-local currentSession = C_DamageMeter.GetCombatSessionFromType(
-    Enum.DamageMeterSessionType.CurrentFight
+-- GetCombatSessionFromType takes two args: sessionType and damageMeterType
+-- Enum.DamageMeterSessionType: Overall (0), Current (1), Expired (2)
+-- Enum.DamageMeterType: DamageDone (0), Dps (1), HealingDone (2), Hps (3), etc.
+local overallDamage = C_DamageMeter.GetCombatSessionFromType(
+    Enum.DamageMeterSessionType.Overall,
+    Enum.DamageMeterType.DamageDone
 )
 
-local lastBossSession = C_DamageMeter.GetCombatSessionFromType(
-    Enum.DamageMeterSessionType.LastBoss
+local currentDamage = C_DamageMeter.GetCombatSessionFromType(
+    Enum.DamageMeterSessionType.Current,
+    Enum.DamageMeterType.DamageDone
 )
 
-local dungeonSession = C_DamageMeter.GetCombatSessionFromType(
-    Enum.DamageMeterSessionType.Dungeon
+local expiredHealing = C_DamageMeter.GetCombatSessionFromType(
+    Enum.DamageMeterSessionType.Expired,
+    Enum.DamageMeterType.HealingDone
 )
 ```
 
