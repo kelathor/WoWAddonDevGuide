@@ -9,7 +9,7 @@ color: purple
 
 ```
 ADDONS_DIR:    D:\Games\World of Warcraft\_retail_\Interface\AddOns\
-GUIDE_DIR:     D:\Games\World of Warcraft\_retail_\Interface\+++WoW Addon Development Guide (AI Generated)+++\
+GUIDE_DIR:     D:\Games\World of Warcraft\_retail_\Interface\+++WoW Addon Development Guide+++\
 BLIZZARD_SRC:  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)\
 ```
 

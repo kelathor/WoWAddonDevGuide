@@ -83,9 +83,9 @@ Edit `WoWAddon-Expert.md` and update the **Local Paths** section at the very top
 ```
 ## Local Paths (UPDATE THESE FOR YOUR SYSTEM)
 
-ADDONS_DIR:    D:\Games\World of Warcraft\_retail_\Interface\AddOns\
-GUIDE_DIR:     D:\Games\World of Warcraft\_retail_\Interface\+++WoW Addon Development Guide (AI Generated)+++\
-BLIZZARD_SRC:  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)\
+ADDONS_DIR:    D:\Games\WoW\_retail_\Interface\AddOns
+GUIDE_DIR:     D:\Games\WoW\_retail_\Interface\+++WoW Addon Development Guide+++
+BLIZZARD_SRC:  D:\Games\WoW\_retail_\Interface\+wow-ui-source+ (12.0.0)
 ```
 
 Change these paths to match where you have:
@@ -100,9 +100,15 @@ There is also a **Note** below the paths block that references the previous UI s
 Edit `wow.md` and update the **User Configuration** table at the very top of the file:
 
 ```
-| **AddOns Directory**    | D:\Games\World of Warcraft\_retail_\Interface\AddOns             |
-| **Blizzard UI Source**  | D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0) |
+AddOns Directory    D:\Games\WoW\_retail_\Interface\AddOns
+Guide Directory     D:\Games\WoW\_retail_\Interface\+++WoW Addon Development Guide+++
+Blizzard UI Source  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)
 ```
+
+Change these paths to match where you have:
+- **AddOns Directory**: Your WoW AddOns directory
+- **Guide Directory**: This WoW Addon Development Guide directory
+- **Blizzard UI Source**: Your Blizzard UI source directory
 
 The coordinator passes these paths to the subagent on each delegation, so both files need to know where your WoW installation lives.
 

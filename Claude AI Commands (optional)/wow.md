@@ -7,6 +7,7 @@
 | Setting | Path |
 |---------|------|
 | **AddOns Directory** | `D:\Games\World of Warcraft\_retail_\Interface\AddOns` |
+| **Guide Directory** | `D:\Games\World of Warcraft\_retail_\Interface\+++WoW Addon Development Guide+++` |
 | **Blizzard UI Source** | `D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)` |
 
 ---
