@@ -93,6 +93,8 @@ Change these paths to match where you have:
 - **GUIDE_DIR**: This WoW Addon Development Guide directory
 - **BLIZZARD_SRC**: Your Blizzard UI source directory (the `+wow-ui-source+` folder you downloaded/extracted alongside the game client)
 
+There is also a **Note** below the paths block that references the previous UI source version for API comparisons. Update the version number in that Note if yours differs.
+
 ### Step 4: Update the Coordinator's User Configuration
 
 Edit `wow.md` and update the **User Configuration** table at the very top of the file:
