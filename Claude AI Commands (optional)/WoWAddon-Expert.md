@@ -10,12 +10,12 @@ color: purple
 ```
 ADDONS_DIR:    D:\Games\World of Warcraft\_retail_\Interface\AddOns\
 GUIDE_DIR:     D:\Games\World of Warcraft\_retail_\Interface\+++WoW Addon Development Guide+++\
-BLIZZARD_SRC:  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)\
+BLIZZARD_SRC:  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.5)\
 ```
 
 All documentation files are in GUIDE_DIR. All addons should be saved to ADDONS_DIR. Blizzard's official UI source code is in BLIZZARD_SRC.
 
-*(<u>Note</u>:  The BLIZZARD_SRC directory is the **current** source directory.  If you want to compare with the previous release [i.e., if you're updating an addon from one API version to another], the most recent previous source directory is at "D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (11.2.7)")*
+*(<u>Note</u>:  The BLIZZARD_SRC directory is the **current** source directory (12.0.5).  If you want to compare with previous releases [i.e., if you're updating an addon from one API version to another], older source directories are available at "D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)" and "D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (11.2.7)")*
 
 ---
 
@@ -230,7 +230,7 @@ You are typically spawned by the `/wow` coordinator command. Your job is to exec
 
 ### TOC File Structure
 ```
-## Interface: 120000, 120001
+## Interface: 120005, 120001, 120000
 ## Title: My Addon
 ## Notes: Addon description
 ## Author: Author Name
@@ -339,9 +339,18 @@ See `12a_Secret_Safe_APIs.md` for complete documentation.
 - **C++ event taint attribution (12.0.0+):** State-changing C++ API calls from addon code (e.g., `C_QuestLog.AddWorldQuestWatch()`, `ShowUIPanel()`, `WorldMapFrame:SetMapID()`) inherently produce tainted events. Neither `securecallfunction` nor `C_Timer.After(0, ...)` prevents this. Practical options: avoid the calls (read-only mode), accept the taint, or provide a user toggle. `pcall()` catches secret value errors; `SetScale(0.00001)` or `SetAlpha(0)` replaces `Hide()` during combat; defer restricted ops to `PLAYER_REGEN_ENABLED`.
 - **Quest reward data loading:** `HaveQuestData(questID)` does NOT guarantee reward data is loaded. `GetNumQuestLogRewards(questID)` can transiently return 0 during `QUEST_LOG_UPDATE`. Use `C_QuestLog.RequestLoadQuestByID()` + `QUEST_DATA_LOAD_RESULT` event, and cache known-good reward data.
 - **C_TaskQuest.GetQuestsOnMap():** Returns quests from queried map AND child sub-zones. Child quests have `mapID` remapped to parent; use `C_TaskQuest.GetQuestZoneID(questID)` for the true zone.
-- **Cooldown Frame Restrictions (12.0.1):** `SetCooldown()`, `SetCooldownFromExpirationTime()`, `SetCooldownDuration()`, `SetCooldownUNIX()` — **restricted** from tainted addon code with secret values. `SetCooldownFromDurationObject()` — the **ONLY** method that accepts secret values for cooldown display. `ActionButton_ApplyCooldown` — secure delegate removed, throws Lua errors with secrets. Use `C_Spell.GetSpellCooldownDuration()` or `C_LossOfControl.GetActiveLossOfControlDuration()` to get duration objects. For **item cooldowns** (no native Duration API), synthesize manually: `C_DurationUtil.CreateDuration()` + `dur:SetTimeFromStart(start, duration, modRate)`. New non-secret fields on cooldown APIs: `isActive` (should UI render cooldown?), `isEnabled`, `maxCharges`. Cooldown aura spells now baked into API results (no need for `C_UnitAuras.GetCooldownAuraBySpellID`).
+- **Cooldown Frame Restrictions (12.0.1):** `SetCooldown()`, `SetCooldownFromExpirationTime()`, `SetCooldownDuration()`, `SetCooldownUNIX()` — **restricted** from tainted addon code with secret values. `SetCooldownFromDurationObject()` — the **ONLY** method that accepts secret values for cooldown display. `ActionButton_ApplyCooldown` — secure delegate removed, throws Lua errors with secrets. Use `C_Spell.GetSpellCooldownDuration()` or `C_LossOfControl.GetActiveLossOfControlDuration()` to get duration objects. For **item cooldowns** (no native Duration API), synthesize manually: `C_DurationUtil.CreateDuration()` + `dur:SetTimeFromStart(start, duration, modRate)`. New non-secret fields on cooldown APIs: `isActive` (should UI render cooldown?), `isEnabled`, `maxCharges`. Cooldown aura spells now baked into API results (no need for `C_UnitAuras.GetCooldownAuraBySpellID`). **12.0.5 additions:** `cooldown:SetCountdownFormatter(formatter)` and `cooldown:SetCountdownMillisecondsThreshold(seconds)` for custom countdown text rendering (accepts secret numbers); new `ignoreGCD` param on `C_Spell.GetSpellChargeDuration`, `C_ActionBar.GetActionChargeDuration`, `C_SpellBook.GetSpellBookItemChargeDuration`.
 - **Private aura APIs combat-restricted (12.0.1):** `AddPrivateAuraAnchor`, `RemovePrivateAuraAnchor`, `SetPrivateWarningTextAnchor`, `AddPrivateAuraAppliedSound`, `RemovePrivateAuraAppliedSound` — set up during init, not during combat.
 - **String format with secrets (12.0.1):** `string.format` precision specifiers (e.g., `"%.1s"`) restricted with secret strings — use `SetFormattedText` for display.
+- **Numeric formatters accept secrets (12.0.5+):** `AbbreviatedNumberFormatter`, `NumericRuleFormatter`, `SecondsFormatter` — their `Format` functions on duration objects accept secret numbers natively. Plug into cooldown frames via `cooldown:SetCountdownFormatter(formatter)` and `cooldown:SetCountdownMillisecondsThreshold(seconds)`. Preferred over `pcall(string.format)` for secret-number display.
+- **Per-plate nameplate hit rect (12.0.5+):** `nameplate:SetHitTestPoints({anchors})`, `nameplate:SetAllHitTestPoints(region)`, `nameplate:CanChangeHitTestPoints()`, `nameplate:ClearAllHitTestPoints()`, `nameplate:GetHitTestPoints()`. Preferred over the global `C_NamePlate.SetNamePlateSize(w, h)` trick because it does not steal clicks from adjacent plates. `CanChangeHitTestPoints()` returns false for tainted code during combat, except on the tick a unit is first assigned — check it before attempting updates.
+- **Aura classification fields non-secret (12.0.5+):** `isHelpful`, `isHarmful`, `isRaid`, `isNameplateOnly`, `isFromPlayerOrPlayerPet` on `AuraData` are NOT secret — can be read/compared in Lua during combat. Identifier fields (`name`, `spellId`, `icon`, durations) remain secret. `SecureAuraHeaderTemplate` now sorts permanent auras after long-duration auras.
+- **auraInstanceID re-randomizes (12.0.5+):** aura instance IDs now re-randomize on encounter / M+ / PvP entry. Do NOT cache by instanceID across `ENCOUNTER_START`, `CHALLENGE_MODE_START`, arena/BG boundaries — reset the cache at those events.
+- **UnitIsUnit restrictions (12.0.5+):** `UnitIsUnit(a, b)` returns secret if either is `targettarget`/`focustarget`; returns `nil` if comparison is forbidden. Allowed comparisons: either unit is `player`/`pet`/`vehicle`/`mouseover`/`target`/`softenemy`/`softfriend`/`softinteract`/`focus`/`none`/`npc`/`questnpc`; OR one is a party/raid token (or its pet) AND the other is NOT a compound/nameplate/target-of-target token. `UnitName` no longer accepts secret unit tokens. `UnitTokenFromGUID` no longer returns `arena`/`nameplate`/`boss`/`party`/`raid`/`targettarget`/`focustarget` tokens when identities are secret.
+- **table.freeze / table.isfrozen (12.0.5+):** `table.freeze(t)` makes a table read-only (mutation raises). `table.isfrozen(t)` inspects. Use for shipping immutable config tables.
+- **"outfit" SecureActionButtonTemplate type (12.0.5+):** `btn:SetAttribute("type", "outfit")` + `btn:SetAttribute("outfit", outfitNameOrID)` applies a transmog outfit via secure button. `GetTransmogOutfitIndex` available in restricted environment.
+- **Misc 12.0.5 fixes:** `GetRaidRosterInfo` returns `"Unknown"` string (not `nil`) when name uncached — gate on `name ~= nil and name ~= "Unknown"`. `UNIT_CONNECTION` now fires reliably — remove `C_Timer` polling workarounds. `IsInInstance()` correctly returns `true` inside delves. Addon execution throttles relaxed during `PLAYER_LOGOUT` / `ADDONS_UNLOADING` (for saved-variable cleanup).
+- **Predicates table in API docs (12.0.5+):** Generated API documentation now includes per-API `Predicates` entries describing secret/taint restrictions. Authoritative reference when unsure whether an API accepts secret arguments.
 
 ## Common Libraries
 

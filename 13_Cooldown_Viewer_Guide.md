@@ -469,7 +469,7 @@ end
 
 ### Charge Cooldown Duration
 
-`C_Spell.GetSpellChargeDuration(spellID)` returns a `DurationObject` for the charge recharge timer. Use this alongside `C_Spell.GetSpellCharges()` when `maxCharges > 1`. For charge-based spells, prefer the charge recharge duration over the spell cooldown duration for the swipe display:
+`C_Spell.GetSpellChargeDuration(spellID, ignoreGCD)` returns a `DurationObject` for the charge recharge timer. Use this alongside `C_Spell.GetSpellCharges()` when `maxCharges > 1`. For charge-based spells, prefer the charge recharge duration over the spell cooldown duration for the swipe display:
 
 ```lua
 local chargeInfo = C_Spell.GetSpellCharges(spellID)
@@ -487,6 +487,10 @@ else
     end
 end
 ```
+
+**12.0.5 update — `ignoreGCD` parameter:** The charge-duration-constructing APIs gained a second `ignoreGCD` boolean parameter in 12.0.5. Pass `true` to exclude the global cooldown from the returned duration. The same parameter is available on `C_ActionBar.GetActionChargeDuration(slot, ignoreGCD)` and `C_SpellBook.GetSpellBookItemChargeDuration(spellBookItemSlotIndex, spellBookItemType, ignoreGCD)`.
+
+**12.0.5 update — zero-span duration at max charges:** These charge-duration APIs now consistently return a **zero-span duration object** when the spell/action is at maximum charges (previously nil or a live-counting duration). Zero-span durations are treated as fully elapsed by the cooldown framework, so UI code can rely on `SetCooldownFromDurationObject(dur)` producing a "nothing to count down" display without special-casing.
 
 ### Charge Detection Gap (Caveat)
 
@@ -1214,6 +1218,8 @@ All appearance setters have `SecretArguments = "AllowedWhenUntainted"`:
 | `SetBlingTexture` | texture, r, g, b, a | Set the completion bling texture |
 | `SetCountdownAbbrevThreshold` | seconds | Threshold for abbreviated countdown text |
 | `SetCountdownFont` | fontName | Set the countdown font |
+| `SetCountdownFormatter` *(12.0.5+)* | formatter (NumericFormatter, Nilable) | Plug in a `NumericFormatter` subclass (e.g., `AbbreviatedNumberFormatter`, `SecondsFormatter`, `NumericRuleFormatter`) to control how the countdown renders. Formatter `Format` functions accept secret numbers natively. Pass `nil` to clear. See [Formatter-Based Countdown Text](#formatter-based-countdown-text-1205) below. |
+| `SetCountdownMillisecondsThreshold` *(12.0.5+)* | seconds | Below this threshold, cooldown numbers display with one decimal place (e.g., "6.7") instead of integer seconds. |
 | `SetDrawBling` | bool | Enable/disable bling animation |
 | `SetDrawEdge` | bool | Enable/disable sweeping edge |
 | `SetDrawSwipe` | bool | Enable/disable swipe overlay |
@@ -1238,6 +1244,55 @@ All appearance setters have `SecretArguments = "AllowedWhenUntainted"`:
 | `CooldownFrame_Set` | `self`, `start`, `duration`, `enable`, `forceShowDrawEdge`, `modRate` | Convenience wrapper: if enabled and start/duration > 0, calls `SetCooldown`; otherwise calls `CooldownFrame_Clear`. **Inherits `SetCooldown` restrictions** — not safe from tainted code with secret values in 12.0.1+; use `SetCooldownFromDurationObject` instead in that case. |
 | `CooldownFrame_Clear` | `self` | Calls `self:Clear()` |
 | `CooldownFrame_SetDisplayAsPercentage` | `self`, `percentage` | Pauses the cooldown and sets it to display a static percentage (0-1). **Inherits `SetCooldown` restrictions** — not safe from tainted code with secret values in 12.0.1+. |
+
+### Formatter-Based Countdown Text (12.0.5+)
+
+Patch 12.0.5 added two new CooldownFrame methods that let addons customize how countdown text is rendered — and critically, the new formatter types accept **secret numbers natively**. This is the preferred replacement for `pcall(string.format, "%.0f", secretValue)` workarounds in 12.0.5+.
+
+**New CooldownFrame methods:**
+
+- `cooldown:SetCountdownFormatter(formatter)` — plug in a `NumericFormatter` subclass to control countdown text. Pass `nil` to clear. `SecretArguments = "AllowedWhenUntainted"`.
+- `cooldown:SetCountdownMillisecondsThreshold(seconds)` — below this threshold, numbers render with one decimal place (e.g., "6.7"). `SecretArguments = "AllowedWhenUntainted"`.
+
+**New numeric formatter types (all accept secret numbers via their `Format` function on duration objects):**
+
+| Formatter | Use case |
+|-----------|----------|
+| `AbbreviatedNumberFormatter` | Human-readable abbreviations (e.g., "1.2M") |
+| `NumericRuleFormatter` | Locale-aware pluralization and rule-based formatting |
+| `SecondsFormatter` | Duration / time formatting |
+
+Base class: `NumericFormatter`. API documentation for each formatter type lives in `Interface\AddOns\Blizzard_APIDocumentationGenerated\` under `AbbreviatedNumberFormatterAPIDocumentation.lua`, `NumericFormatterAPIDocumentation.lua`, `NumericRuleFormatterAPIDocumentation.lua`, and `SecondsFormatterAPIDocumentation.lua` in the 12.0.5 client source.
+
+**Usage:**
+
+```lua
+-- 12.0.5+ preferred pattern for secret-safe countdown text
+local cooldown = myButton.Cooldown
+local dur = C_Spell.GetSpellCooldownDuration(spellID)
+if dur then
+    cooldown:SetCooldownFromDurationObject(dur)
+    cooldown:SetCountdownFormatter(SecondsFormatter)
+    cooldown:SetCountdownMillisecondsThreshold(10)  -- show "6.7" style under 10s
+end
+```
+
+**Cross-client fallback (pre-12.0.5):**
+
+```lua
+-- Check for 12.0.5+ formatter support
+local tocVersion = select(4, GetBuildInfo())
+if tocVersion >= 120005 and cooldown.SetCountdownFormatter and SecondsFormatter then
+    cooldown:SetCountdownFormatter(SecondsFormatter)
+    cooldown:SetCountdownMillisecondsThreshold(10)
+else
+    -- Older clients — fall back to the pcall(string.format) pattern on the text FontString:
+    -- local ok, text = pcall(string.format, "%.0f", secretSeconds)
+    -- cooldown.Text:SetText(ok and text or "?")
+end
+```
+
+See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full 12.0.5 delta, and [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for complete secret-value handling patterns.
 
 ---
 

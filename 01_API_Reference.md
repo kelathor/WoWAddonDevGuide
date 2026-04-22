@@ -720,6 +720,60 @@ end
 
 > **See also:** [Cooldown Viewer Guide](13_Cooldown_Viewer_Guide.md#cooldownframe-widget-api) for complete CooldownFrame API reference including secret value annotations.
 
+#### 12.0.5 Changes
+
+Patch 12.0.5 (TOC 120005) builds on the 12.0.1 secret-value refinements. See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full patch delta.
+
+**Aura classification fields NO LONGER secret during combat:**
+- `isHelpful`, `isHarmful`, `isRaid`, `isNameplateOnly`, `isFromPlayerOrPlayerPet` — readable from tainted Lua during combat
+- Identifier fields (`name`, `spellId`, `icon`, durations) remain secret
+- `auraInstanceID` re-randomizes on encounter / M+ / PvP entry — invalidate instance-id-keyed caches at those boundaries
+
+**New Cooldown frame methods (accept secret numbers via formatters):**
+- `cooldown:SetCountdownFormatter(formatter)` — plug in a `NumericFormatter` subclass to customize countdown text rendering
+- `cooldown:SetCountdownMillisecondsThreshold(seconds)` — below this threshold, numbers render with one decimal place
+
+**New numeric formatter types (accept secret numbers):**
+- `AbbreviatedNumberFormatter`, `NumericRuleFormatter`, `SecondsFormatter` (all extend `NumericFormatter`)
+
+**Charge duration APIs — new `ignoreGCD` parameter:**
+- `C_Spell.GetSpellChargeDuration(spellID, ignoreGCD)`
+- `C_ActionBar.GetActionChargeDuration(slot, ignoreGCD)`
+- `C_SpellBook.GetSpellBookItemChargeDuration(spellBookItemSlotIndex, spellBookItemType, ignoreGCD)`
+- Return zero-span duration at max charges (treated as fully elapsed by the framework)
+
+**Per-plate nameplate hit rect API:**
+- `nameplate:CanChangeHitTestPoints()`, `:SetHitTestPoints(anchors)`, `:SetAllHitTestPoints(region)`, `:GetHitTestPoints()`, `:ClearAllHitTestPoints()`, `:SetStackingBoundsFrame(frame)`
+- Preferred over the global `C_NamePlate.SetNamePlateSize(w, h)` — does not steal clicks from adjacent plates
+
+**Unit identity APIs stricter about secret tokens:**
+- `UnitName(unit)` — no longer accepts secret unit tokens
+- `UnitSpellTargetName(unit)` — returns names only for player units
+- `UnitTokenFromGUID(guid)` — no longer returns arena/nameplate/boss/party/raid/targettarget/focustarget tokens when identities are secret
+- `UnitIsUnit(a, b)` — returns secret if either is `targettarget`/`focustarget`; returns nil for forbidden comparisons (see [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the allow-list)
+
+**Player stat APIs inherit aura secrecy:**
+- Stat-returning APIs now return secrets if the influencing auras are secret (previously unconditionally non-secret)
+
+**New Lua primitives:**
+- `table.freeze(tbl)` — make a table read-only (mutation raises)
+- `table.isfrozen(tbl)` — inspect
+- `Ambiguate(name, context)` — now accepts secret string arguments from addons
+
+**Widget additions:**
+- `FontString:SetSmoothScaling(bool)` / `FontString:GetSmoothScaling()` — per-FontString HiDPI-friendly smooth scaling
+
+**Secure button additions:**
+- New `"outfit"` action type for `SecureActionButtonTemplate` — apply a transmog outfit via secure button (`SetAttribute("type", "outfit")` + `SetAttribute("outfit", outfitNameOrID)`)
+- `GetTransmogOutfitIndex` available in the restricted addon environment
+
+**Miscellaneous:**
+- `GetRaidRosterInfo(index)` returns `"Unknown"` (string) instead of `nil` when name uncached
+- `UNIT_CONNECTION` event reliability fixed (previously missed some party connect/disconnect events)
+- `IsInInstance()` correctly returns `true` inside delves
+- Addon execution throttles relaxed during `PLAYER_LOGOUT` and `ADDONS_UNLOADING`
+- New `Predicates` table in generated API docs describes per-API secret/taint restrictions
+
 ---
 
 ## Lua Extensions
@@ -750,6 +804,20 @@ table.count(tbl)
 local mixed = {1, 2, 3, foo = "bar", baz = "qux"}
 print(#mixed)          -- Returns 3 (only array part)
 print(table.count(mixed))  -- Returns 5 (all entries)
+
+-- 12.0.5+: Read-only tables
+table.freeze(tbl)
+    -- Makes the table read-only; subsequent writes raise an error
+    -- Returns the table reference
+table.isfrozen(tbl)
+    -- Returns true if the table is frozen
+
+-- Example
+local config = table.freeze({ retries = 3, timeout = 5 })
+-- config.retries = 5  -- ERROR: attempt to modify a frozen table
+if table.isfrozen(config) then
+    -- Table is read-only
+end
 
 -- Standard WoW table functions
 tinsert(table, [pos,] value)  -- Insert into table

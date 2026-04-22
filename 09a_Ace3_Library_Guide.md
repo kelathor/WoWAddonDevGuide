@@ -2707,7 +2707,7 @@ MyAddon/
 **TOC file (load order matters):**
 
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 ## Notes: Example addon with localization
 
@@ -2838,7 +2838,7 @@ This section builds a complete, working addon called **GoldTracker** -- a simple
 ### TOC File
 
 ```toc
-## Interface: 120001
+## Interface: 120005
 ## Title: GoldTracker
 ## Notes: Tracks gold earned and spent per session
 ## Author: YourName

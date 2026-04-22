@@ -1,6 +1,32 @@
 <\!-- CLAUDE_SKIP_START -->
 # WoW Addon Development Knowledge Base - Update Log
 
+## Version 3.3 - 2026-04-22
+
+### Update: WoW 12.0.5 migration coverage across the KB
+
+**Summary:**
+Patch 12.0.5 shipped (TOC 120005, released as the second major Midnight patch; no 12.0.2/3/4 — next is 12.0.7). This update adds 12.0.5 coverage to the migration guide and then propagates the delta across the rest of the knowledge base. The 12.0.5 delta is smaller in scope than the 12.0.0 / 12.0.1 changes but meaningful for combat/UI addons: new numeric formatters that accept secret numbers natively, per-plate nameplate hit-rect override API, aura classification fields becoming non-secret, stricter `UnitIsUnit` / unit-name identity rules, `table.freeze` / `table.isfrozen`, a new `"outfit"` `SecureActionButtonTemplate` action type, and a handful of reliability fixes (`UNIT_CONNECTION`, `IsInInstance` in delves, `GetRaidRosterInfo` "Unknown" sentinel).
+
+**Files Updated (Task 1 — migration guide):**
+- [12_API_Migration_Guide.md](12_API_Migration_Guide.md) - New "Patch 12.0.5 (TOC 120005)" subsection; version-number table bumped; `C_NamePlateManager` "may be restricted" note pointed to the new 12.0.5 `SetHitTestPoints` family; aura-tracking example qualifies which fields remain secret; patch-level detection snippet extended with `isMid_12_0_1` / `isMid_12_0_5`; new testing-commands block for 12.0.5-specific probes; migration quick-reference extended with six 12.0.5 rows; 12.0.0 cooldown-arithmetic note cross-linked forward to 12.0.5 formatters.
+
+**Files Updated (Task 2 — KB-wide propagation, Apr 22):**
+- [README.md](README.md) - Version label bumped to 12.0.5 / 120005; added "12.0.5 Additions" subsection under Critical Changes.
+- [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) - Version label bumped; tutorial `## Interface:` examples updated to 120005; added 12.0.5 refinements callout.
+- [00_MASTER_PROMPT.md](00_MASTER_PROMPT.md) - Current-version line bumped; TOC examples updated; added "12.0.5 Refinements (Current Patch)" section.
+- [KNOWLEDGE_BASE_UPDATE_LOG.md](KNOWLEDGE_BASE_UPDATE_LOG.md) - This entry; the "Update for WoW 12.0.5 / 12.1.0 when released" maintenance item is now DONE for 12.0.5.
+- *(Other files — see per-file edits in the per-file workers' reports.)*
+
+**Content Verified Against:**
+- [Patch 12.0.5/API changes](https://warcraft.wiki.gg/wiki/Patch_12.0.5/API_changes) on warcraft.wiki.gg
+- Blizzard UI source tree at `+wow-ui-source+ (12.0.5)` — confirmed presence of `FrameAPINamePlateDocumentation.lua`, `AbbreviatedNumberFormatterAPIDocumentation.lua`, `NumericRuleFormatterAPIDocumentation.lua`, `SecondsFormatterAPIDocumentation.lua`, `EncounterEventsDocumentation.lua`, `CooldownFrameConstantsDocumentation.lua`, `SecretWrapperConstantsDocumentation.lua`, `TalentConstantsDocumentation.lua`, `PhotoSharingUIDocumentation.lua`, `HousingInspectModeUIDocumentation.lua`, `ImageSharingConstantsDocumentation.lua`, `SharedScriptObjectNamePlateFrameDocumentation.lua`, `ChatSharedDocumentation.lua`, `AutoCompleteDocumentation.lua`, `AutoCompleteSharedDocumentation.lua`, `ButtonStateDocumentation.lua`, `CombatAudioAlertSharedDocumentation.lua` — net diff from 12.0.0 to 12.0.5.
+- Cooldown API signatures — `SetCountdownFormatter(formatter)` and `SetCountdownMillisecondsThreshold(seconds)` at `FrameAPICooldownDocumentation.lua` lines 363 and 373.
+- `ignoreGCD` parameter — verified at `ActionBarFrameDocumentation.lua:180`, `SpellDocumentation.lua:275`, `SpellBookDocumentation.lua:244`.
+- Per-plate hit-rect functions — `FrameAPINamePlateDocumentation.lua` lines 10-80 (`CanChangeHitTestPoints`, `ClearAllHitTestPoints`, `GetHitTestPoints`, `SetAllHitTestPoints`, `SetHitTestPoints`, `SetStackingBoundsFrame`).
+
+---
+
 ## Version 3.2 - 2026-04-05
 
 ### Audit: 40-item verified audit + tooltip/map-canvas guidance reground
@@ -833,7 +859,8 @@ The guide was validated against:
 - Housing addon examples and tutorials
 
 **Maintenance Tasks:**
-- Update for WoW 12.0.5 / 12.1.0 when released
+- ~~Update for WoW 12.0.5 when released~~ — DONE (Version 3.3, 2026-04-22)
+- Update for WoW 12.0.7 / 12.1.0 when released
 - Monitor for new API changes and deprecations
 - Track Secret Values system evolution
 - Add new library documentation as libraries adapt to 12.0.0

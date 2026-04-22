@@ -37,7 +37,7 @@ WoW addons persist data between sessions using **saved variables**. These are Lu
 Shared across all characters on the account:
 
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 ## SavedVariables: MyAddonDB, MyAddonConfig
 ```
@@ -52,7 +52,7 @@ WTF/Account/[AccountName]/SavedVariables/MyAddon.lua
 Unique to each character:
 
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 ## SavedVariablesPerCharacter: MyAddonCharDB, MyAddonProfiles
 ```
@@ -95,7 +95,7 @@ You can declare multiple saved variables (comma-separated):
 **New in 11.1.5:** This directive changes when saved variables are loaded relative to addon Lua files.
 
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 ## SavedVariables: MyAddonDB
 ## LoadSavedVariablesFirst: 1
@@ -671,7 +671,7 @@ end
 
 **Step 1: Enable in TOC file**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: MyDataAddon
 ## SavedVariables: MyDataAddonDB
 ## AllowAddOnTableAccess: 1
@@ -1069,7 +1069,7 @@ end
 
 **MyAddon.toc:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Tracking Addon
 ## SavedVariables: MyTrackerDB
 ## SavedVariablesPerCharacter: MyTrackerCharDB

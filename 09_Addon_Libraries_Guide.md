@@ -828,7 +828,7 @@ end
 
 **List libraries before your code:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 
 # Libraries

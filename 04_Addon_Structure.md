@@ -37,7 +37,7 @@ AddonName/
 **Basic TOC structure:**
 ```
 ## Title: My Addon Name
-## Interface: 120000
+## Interface: 120005
 ## Author: Your Name
 ## Version: 1.0.0
 ## Notes: Brief description of what the addon does
@@ -66,11 +66,12 @@ UI.xml
 #### `## Interface: <version>`
 Specifies which game version the addon is compatible with.
 ```
-## Interface: 120000        # Version 12.0.0 (Midnight)
-## Interface: 120000        # Version 12.0.0
+## Interface: 120005        # Version 12.0.5 (current Midnight patch)
+## Interface: 120000        # Version 12.0.0 (Midnight launch)
 ## Interface: 0             # Works with any version (Blizzard addons only)
 ```
 **Format:** XXYYZZ where XX=expansion, YY=major, ZZ=minor
+- Example: 120005 = 12.00.05 (Midnight 12.0.5)
 - Example: 120000 = 12.00.00 (Midnight 12.0.0)
 - Example: 110207 = 11.02.07 (The War Within 11.2.7)
 
@@ -106,7 +107,7 @@ Utils.lua
 **Example - Multiple TOC Files (when needed):**
 ```
 MyAddon/
-    MyAddon_Mainline.toc    # ## Interface: 120000
+    MyAddon_Mainline.toc    # ## Interface: 120005
     MyAddon_Cata.toc        # ## Interface: 40402
     MyAddon_Vanilla.toc     # ## Interface: 11508
     Core.lua                # Shared
@@ -118,13 +119,16 @@ MyAddon/
 
 | Game Version | Interface Number | Notes |
 |-------------|------------------|-------|
+| Retail 12.0.5 | 120005 | Current patch (Midnight) |
+| Retail 12.0.1 | 120001 | Midnight launch hotfix |
 | Retail 12.0.0 (Midnight) | 120000 | Expansion launch |
-| Retail 12.0.1 | 120001 | Current patch |
 | TWW 11.2.7 | 110207 | Previous expansion |
 | Classic Cata 4.4.2 | 40402 | Cataclysm Classic |
 | Classic SoD/Era 1.15.8 | 11508 | Season of Discovery / Classic Era |
 | Wrath Classic 3.4.3 | 30403 | WotLK Classic |
 | TBC Classic 2.5.4 | 20504 | Burning Crusade Classic |
+
+> **Note on Midnight patch numbering:** There is no 12.0.2 / 12.0.3 / 12.0.4. Blizzard jumped from 12.0.1 directly to 12.0.5. Next is 12.0.7.
 
 **Best Practice Recommendation:**
 For most addons, use **comma-separated versions** in a single TOC file unless you specifically need different file loading per version. This simplifies maintenance and ensures consistent behavior across clients.
@@ -509,7 +513,7 @@ ClassicUI.lua [AllowLoadGameType classic]
 
 **Complete example using inline variables:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: MultiPlatform Addon
 ## Version: 1.0.0
 
@@ -1557,7 +1561,7 @@ SimpleAddon/
 
 **SimpleAddon.toc:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: Simple Addon
 ## Author: YourName
 ## Version: 1.0.0
@@ -1592,7 +1596,7 @@ GoldTracker/
 
 **GoldTracker.toc:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: Gold Tracker
 ## Author: YourName
 ## Version: 1.0.0
@@ -1680,7 +1684,7 @@ RaidFrames/
 
 **RaidFrames.toc:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: Raid Frames
 ## Author: YourName
 ## Version: 2.0.0
@@ -1825,7 +1829,7 @@ MultiVersion/
 
 **MultiVersion_Mainline.toc:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: MultiVersion
 ## Author: YourName
 ## Version: 1.0.0

@@ -166,6 +166,10 @@ end
 
 > **See also:** [Cooldown Viewer Guide](13_Cooldown_Viewer_Guide.md#cooldownframe-widget-api) for complete CooldownFrame API reference and [Secret Safe APIs](12a_Secret_Safe_APIs.md) for duration object patterns.
 
+> **12.0.5 update — formatter-based countdown text.** Patch 12.0.5 added `cooldown:SetCountdownFormatter(formatter)` and `cooldown:SetCountdownMillisecondsThreshold(seconds)` along with new `NumericFormatter` subclasses (`AbbreviatedNumberFormatter`, `NumericRuleFormatter`, `SecondsFormatter`). These accept secret numbers natively, providing a cleaner alternative to `pcall(string.format)` for cooldown text rendering. Older clients still need the pcall fallback. See the [Cooldown Viewer Guide](13_Cooldown_Viewer_Guide.md) for the cross-client pattern.
+>
+> **12.0.5 update — aura classification fields non-secret.** On `AuraData`, the booleans `isHelpful`, `isHarmful`, `isRaid`, `isNameplateOnly`, `isFromPlayerOrPlayerPet` are no longer secret during combat. Other fields (`name`, `spellId`, `icon`, durations) remain secret. See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for the full field-by-field table.
+
 ### Pattern: Safe Serialization
 
 ```lua
@@ -464,7 +468,7 @@ Core.lua
 **Create multiple TOC files when you need different files per version:**
 ```
 MyAddon/
-├── MyAddon_Mainline.toc    ## Interface: 120000
+├── MyAddon_Mainline.toc    ## Interface: 120005
 ├── MyAddon_Vanilla.toc     ## Interface: 11508
 ├── MyAddon_Cata.toc        ## Interface: 40402
 ├── Core.lua                # Shared
@@ -474,7 +478,7 @@ MyAddon/
 
 **In Mainline TOC:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 
 Core.lua
@@ -1416,7 +1420,7 @@ ElvUI/
 
 **Core TOC:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: ElvUI
 ## SavedVariables: ElvDB, ElvPrivateDB
 
@@ -1426,7 +1430,7 @@ Core\Modules\Load_Modules.xml
 
 **Options TOC:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: ElvUI Options
 ## Dependencies: ElvUI
 ## LoadOnDemand: 1

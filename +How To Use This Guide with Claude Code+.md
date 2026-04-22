@@ -85,7 +85,7 @@ Edit `WoWAddon-Expert.md` and update the **Local Paths** section at the very top
 
 ADDONS_DIR:    D:\Games\WoW\_retail_\Interface\AddOns
 GUIDE_DIR:     D:\Games\WoW\_retail_\Interface\+++WoW Addon Development Guide+++
-BLIZZARD_SRC:  D:\Games\WoW\_retail_\Interface\+wow-ui-source+ (12.0.0)
+BLIZZARD_SRC:  D:\Games\WoW\_retail_\Interface\+wow-ui-source+ (12.0.5)
 ```
 
 Change these paths to match where you have:
@@ -102,7 +102,7 @@ Edit `wow.md` and update the **User Configuration** table at the very top of the
 ```
 AddOns Directory    D:\Games\WoW\_retail_\Interface\AddOns
 Guide Directory     D:\Games\WoW\_retail_\Interface\+++WoW Addon Development Guide+++
-Blizzard UI Source  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)
+Blizzard UI Source  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.5)
 ```
 
 Change these paths to match where you have:

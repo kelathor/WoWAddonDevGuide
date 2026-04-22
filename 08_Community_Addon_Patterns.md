@@ -150,7 +150,7 @@ MySimpleAddon/
 
 **MySimpleAddon.toc:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Simple Addon
 ## Author: Your Name
 ## Version: 1.0.0
@@ -663,7 +663,7 @@ MyAddon.ExpensiveFunction = ProfileFunction("ExpensiveFunction", MyAddon.Expensi
 ### TOC File Best Practices
 
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 ## Notes: Short description of what the addon does
 ## Author: Your Name

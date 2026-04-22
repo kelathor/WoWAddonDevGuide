@@ -16,7 +16,7 @@
 ## Welcome!
 <!-- CLAUDE_SKIP_START -->
 
-This knowledge base contains everything you need to create, debug, and maintain World of Warcraft addons. Updated for **WoW 12.0.1 (Midnight)** with Interface version **120001**.
+This knowledge base contains everything you need to create, debug, and maintain World of Warcraft addons. Updated through **WoW 12.0.5 (Midnight)** with Interface version **120005**.
 <!-- CLAUDE_SKIP_END -->
 
 ## Critical 12.0.0 Changes
@@ -57,6 +57,20 @@ See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full migratio
 - `C_CombatLog` - Combat log access (limited by secret values)
 - `C_DamageMeter` - **SECRET-PROTECTED** during combat (workarounds exist — see ["Addon Apocalypse" above](#addon-apocalypse---secret-values))
 - `C_Housing` - Player housing system (see [11_Housing_System_Guide.md](11_Housing_System_Guide.md))
+
+### 12.0.5 Refinements
+
+The Midnight patch line shipped 12.0.0 → 12.0.1 → 12.0.5 (no 12.0.2/3/4) and 12.0.5 is the current retail build. What changed that most addon developers will notice:
+
+- **Numeric formatters for secret values:** `AbbreviatedNumberFormatter`, `NumericRuleFormatter`, `SecondsFormatter`. Plug into a Cooldown with `cooldown:SetCountdownFormatter(fmt)` and `cooldown:SetCountdownMillisecondsThreshold(seconds)` — no more `pcall(string.format)` for simple displays.
+- **Per-plate nameplate hit rect:** `nameplate:SetHitTestPoints(...)`, `:SetAllHitTestPoints(region)`, `:CanChangeHitTestPoints()`. Replaces the global `C_NamePlate.SetNamePlateSize` trick.
+- **Aura classification fields no longer secret:** `isHelpful`, `isHarmful`, `isRaid`, `isNameplateOnly`, `isFromPlayerOrPlayerPet` can now be read/compared during combat. Identifier fields (`name`, `spellId`, `icon`, durations) are still secret.
+- **`UnitIsUnit` restrictions:** Comparisons involving `targettarget`, `focustarget`, or nameplate tokens may now return `nil` or secret values. See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the comparison allow-list.
+- **`table.freeze(t)` / `table.isfrozen(t)`:** Read-only tables.
+- **`"outfit"` secure action type:** `SecureActionButtonTemplate` can apply transmog outfits.
+- **`auraInstanceID` re-randomizes** at encounter / M+ / PvP boundaries — invalidate caches.
+
+See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full 12.0.5 delta.
 
 ## How to Use This Knowledge Base
 <!-- CLAUDE_SKIP_START -->
@@ -127,7 +141,7 @@ See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full migratio
 ### Step 2: Create TOC File
 **MyFirstAddon.toc:**
 ```
-## Interface: 120001
+## Interface: 120005
 ## Title: My First Addon
 ## Author: Your Name
 ## Version: 1.0.0
@@ -139,7 +153,7 @@ MyFirstAddon.lua
 
 **Note:** Since Patch 10.1.0, you can support multiple WoW versions with comma-separated Interface values:
 ```
-## Interface: 120001, 110207, 40402, 11508
+## Interface: 120005, 110207, 40402, 11508
 ```
 This means one TOC file works for Retail, Classic, and everything in between (if your code is compatible). See [04_Addon_Structure.md](04_Addon_Structure.md) for details.
 

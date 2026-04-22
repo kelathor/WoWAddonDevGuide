@@ -9,8 +9,9 @@
 6. [Common Blizzard Templates](#common-blizzard-templates)
 7. [Frame Pooling and Object Reuse](#frame-pooling-and-object-reuse)
 8. [Data Provider Pattern](#data-provider-pattern)
-9. [Practical Examples](#practical-examples)
-10. [Best Practices](#best-practices)
+9. [Nameplates](#nameplates)
+10. [Practical Examples](#practical-examples)
+11. [Best Practices](#best-practices)
 
 ---
 
@@ -691,6 +692,18 @@ fontString:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
 fontString:SetFont("Fonts\\FRIZQT__.TTF", 12, false)
 ```
 
+#### Smooth Scaling (12.0.5)
+
+Patch 12.0.5 added per-FontString smooth-scaling control for HiDPI-friendly text rendering. Use when a FontString's parent frame is being scaled and you want the text to interpolate smoothly rather than snap to integer pixel sizes.
+
+```lua
+-- Toggle smooth scaling on/off
+fontString:SetSmoothScaling(true)
+
+-- Inspect current setting
+local isSmooth = fontString:GetSmoothScaling()
+```
+
 ### StatusBar Methods
 
 **Interpolated Values (12.0.0):**
@@ -770,7 +783,18 @@ local minDuration = cooldown:GetMinimumCountdownDuration()
 cooldown:SetMinimumCountdownDuration(3)  -- Only show countdown for 3+ seconds
 ```
 
-> **See also:** [Cooldown Viewer Guide](13_Cooldown_Viewer_Guide.md) for the Blizzard Cooldown Viewer system that uses these methods.
+**Countdown Formatter (12.0.5):**
+```lua
+-- Plug in a NumericFormatter subclass to customize countdown text.
+-- Formatters (AbbreviatedNumberFormatter, SecondsFormatter, NumericRuleFormatter)
+-- accept secret numbers natively, avoiding pcall(string.format) workarounds.
+cooldown:SetCountdownFormatter(SecondsFormatter)  -- nil to clear
+
+-- Below this threshold, numbers render with one decimal place (e.g., "6.7")
+cooldown:SetCountdownMillisecondsThreshold(10)
+```
+
+> **See also:** [Cooldown Viewer Guide](13_Cooldown_Viewer_Guide.md) for the Blizzard Cooldown Viewer system that uses these methods, and [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full 12.0.5 delta.
 
 ### TextureBase Methods
 
@@ -1405,13 +1429,146 @@ end
 
 ---
 
+## Nameplates
+
+Nameplates are the floating unit frames that appear above mobs and players in the world. They are a distinct UI surface driven by `Blizzard_NamePlates` (`NamePlateDriverMixin`) that addons like TidyPlates, Plater, and KuiNameplates customize heavily.
+
+### Unit Tokens and Plate Lookup
+
+Each visible nameplate is addressable by a dedicated unit token:
+
+- `nameplate1`, `nameplate2`, ... `nameplateN` — enemy / neutral / party mob plates in creation order
+- `nameplateplayer` — the local player's personal-resource-display plate (when enabled)
+
+Use `C_NamePlate` to retrieve the frame that backs a token:
+
+```lua
+-- Get one plate by unit token
+local plate = C_NamePlate.GetNamePlateForUnit("nameplate1")
+-- plate is a NamePlateFrame Button; plate.UnitFrame is its Blizzard UnitFrame
+
+-- Get all currently visible plates
+local plates = C_NamePlate.GetNamePlates()
+for _, plate in ipairs(plates) do
+    local unit = plate.namePlateUnitToken  -- e.g. "nameplate1"
+    -- ...
+end
+
+-- Global plate size (HasRestrictions = true; AllowedWhenUntainted)
+-- Affects EVERY plate — not per-plate. See the per-plate hit-rect section
+-- below for the 12.0.5 alternative.
+C_NamePlate.SetNamePlateSize(width, height)
+local w, h = C_NamePlate.GetNamePlateSize()
+```
+
+**Source:** `Blizzard_APIDocumentationGenerated\NamePlateDocumentation.lua`
+
+### Nameplate Events
+
+```lua
+local f = CreateFrame("Frame")
+f:RegisterEvent("NAME_PLATE_CREATED")       -- fires ONCE per plate, at pool spawn time
+f:RegisterEvent("NAME_PLATE_UNIT_ADDED")    -- fires when a plate is assigned a unit token
+f:RegisterEvent("NAME_PLATE_UNIT_REMOVED")  -- fires when the plate's unit goes out of range / dies
+
+f:SetScript("OnEvent", function(self, event, ...)
+    if event == "NAME_PLATE_CREATED" then
+        local plate = ...
+        -- One-time decoration setup (create custom overlays, attach parentKeys, etc.)
+        -- Do NOT read unit info here — the plate has no unit yet.
+
+    elseif event == "NAME_PLATE_UNIT_ADDED" then
+        local unit = ...  -- "nameplate1" / "nameplateplayer" / etc.
+        local plate = C_NamePlate.GetNamePlateForUnit(unit)
+        -- Per-unit refresh: class color, name, aura filters, hostile/friendly styling.
+
+    elseif event == "NAME_PLATE_UNIT_REMOVED" then
+        local unit = ...
+        -- Tear down per-unit state, release pool entries, etc.
+    end
+end)
+```
+
+`FORBIDDEN_NAME_PLATE_CREATED` / `_ADDED` / `_REMOVED` fire for Blizzard-forbidden plates (e.g., certain cinematic NPCs). Most addons ignore these.
+
+### Click Targeting Rules (12.0.0+)
+
+In 12.0.0, Blizzard moved click detection off the Lua-level frame and onto a C++ `HitTestFrame` child of the plate's `UnitFrame`. This makes two rules non-negotiable for any nameplate addon that draws custom visuals:
+
+**Rule 1 — Never `Hide()` the Blizzard UnitFrame.** `Hide()` propagates to children, including the HitTestFrame, which breaks click-to-target. Use `SetAlpha(0)` instead:
+
+```lua
+-- WRONG — breaks click targeting in 12.0.0+:
+plate.UnitFrame:Hide()
+
+-- CORRECT — visually hides but keeps HitTestFrame active:
+plate.UnitFrame:SetAlpha(0)
+```
+
+**Rule 2 — `EnableMouse(false)` on custom overlay frames.** Any frame you parent to the plate (health bar, cast bar, artwork, text container) will intercept clicks before they reach the HitTestFrame unless mouse is disabled:
+
+```lua
+myHealthBar:EnableMouse(false)
+myCastBar:EnableMouse(false)
+myArtwork:EnableMouse(false)
+
+-- If you need hover detection but NOT click interception:
+hoverFrame:EnableMouse(true)
+hoverFrame:SetMouseClickEnabled(false)
+```
+
+For the full breakdown including debugging tips (`GetMouseFoci()`), combat-restriction caveats, and the rationale, see the [Nameplate Click Targeting Changes section in 12_API_Migration_Guide.md](12_API_Migration_Guide.md#nameplate-click-targeting-changes-1200).
+
+### Per-Plate Hit-Rect API (12.0.5+)
+
+Patch 12.0.5 added methods directly on each nameplate frame that let an addon override the hit rect on a per-plate basis. This replaces the global `C_NamePlate.SetNamePlateSize(w, h)` workaround — the old path affected EVERY plate at once and an oversized global hit rect steals clicks from adjacent plates.
+
+**API (`FrameAPINamePlate` methods on each nameplate):**
+
+| Method | Purpose |
+|--------|---------|
+| `plate:CanChangeHitTestPoints()` | Returns `true` if the caller is permitted to change hit-test points right now. Returns `false` for tainted code during combat, except on the tick a unit is first assigned. Check this before any write. |
+| `plate:SetAllHitTestPoints(region)` | Set the hit rect to fully encompass `region`. Requires `CanChangeHitTestPoints`. |
+| `plate:SetHitTestPoints(anchors)` | Set the hit rect from a list of `AnchorBinding` tables. Requires `CanChangeHitTestPoints`. |
+| `plate:GetHitTestPoints()` | Inspect the current anchor list. |
+| `plate:ClearAllHitTestPoints()` | Remove all hit-test anchors. Requires `CanChangeHitTestPoints`. |
+
+**Example — match the hit rect to a custom visual:**
+
+```lua
+local function OnNamePlateUnitAdded(unit)
+    local plate = C_NamePlate.GetNamePlateForUnit(unit)
+    if not plate or not plate.CanChangeHitTestPoints then
+        return  -- pre-12.0.5 client; use C_NamePlate.SetNamePlateSize fallback
+    end
+
+    -- Make Blizzard's UnitFrame invisible but leave the HitTestFrame active
+    plate.UnitFrame:SetAlpha(0)
+
+    -- Size the hit rect to match your custom visual
+    if plate:CanChangeHitTestPoints() then
+        plate:SetAllHitTestPoints(myAddon.plates[unit].visualFrame)
+    end
+end
+```
+
+**Cross-client fallback:** On pre-12.0.5 clients, `plate.CanChangeHitTestPoints == nil`. Fall back to the global `C_NamePlate.SetNamePlateSize(width, height)` — accepting that it applies to all plates and that oversized values will steal clicks from adjacent plates.
+
+**Source:** `Blizzard_APIDocumentationGenerated\FrameAPINamePlateDocumentation.lua`
+
+### Secret Values and Combat Restrictions on Nameplates
+
+The same secret-value and combat-lockdown rules that apply to unit frames apply to nameplate decoration: `UnitHealth(unit)` / `UnitPower(unit)` on a `nameplateN` token can return secret values during combat, the per-plate hit-rect setters won't permit changes during combat for tainted code (hence `CanChangeHitTestPoints()`), and aura-related APIs on nameplate units follow the same 12.0.5 classification-field rules as everywhere else. See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for the complete secret-safe-API reference.
+
+---
+
 ## Practical Examples
 
 ### Complete Addon Frame Example
 
 **MyAddon.toc:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: My Addon
 ## Author: Your Name
 ## Version: 1.0.0

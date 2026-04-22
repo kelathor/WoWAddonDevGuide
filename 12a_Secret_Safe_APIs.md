@@ -520,6 +520,46 @@ SetTableSecurityOption(tbl, option)
 
 **Note:** This is `HasRestrictions = true` - addon code likely cannot use it.
 
+### table.freeze(tbl) / table.isfrozen(tbl) (NEW in 12.0.5)
+
+Patch 12.0.5 added Lua-level read-only table support. These functions are usable from addon code (not restricted).
+
+```lua
+-- Make a table read-only
+local config = table.freeze({
+    maxRetries = 3,
+    timeoutSeconds = 5,
+    debugMode = false,
+})
+
+-- Subsequent writes raise an error
+-- config.maxRetries = 5  -- ERROR: attempt to modify a frozen table
+
+-- Inspect
+if table.isfrozen(config) then
+    -- Table is read-only
+end
+```
+
+**Use cases:**
+- Shipping immutable constant tables between modules or to other addons (prevents accidental mutation downstream).
+- Catching bugs where shared config tables are being mutated from unexpected call sites.
+- Freezing lookup tables after initialization to lock their shape for the lifetime of the addon.
+
+**Not related to secret values or taint directly** — this is a Lua-level immutability primitive. But it fits naturally here as part of the table-security story.
+
+### Predicates Table in API Documentation (NEW in 12.0.5)
+
+Patch 12.0.5 added a `Predicates` table to generated Lua API documentation. Each entry describes per-API restrictions — specifically, whether an API accepts secret arguments, whether it's combat-restricted, and related metadata.
+
+**How to use it for addon development:** When you're unsure whether a given API accepts secret arguments, open the corresponding `*APIDocumentation.lua` file in `Interface\AddOns\Blizzard_APIDocumentationGenerated\` and look for the `Predicates` entries on the function you're interested in. This is the authoritative reference — more reliable than inferring from behavior.
+
+Common `Predicates` labels you'll see in the 12.0.5 documentation:
+- `SecretArguments = "AllowedWhenUntainted"` — function accepts secret arguments, but ONLY from untainted (Blizzard) code. From addon code, passing a secret will fail.
+- `SecretArguments = "AllowedWhenTainted"` — function accepts secret arguments from any caller, including tainted addon code.
+- `HasRestrictions = true` — function has broader restrictions; typically means combat-restricted or requires a specific security context.
+- `SecretReturns` entries indicate which return values may be secret.
+
 ---
 
 ## SecureTypes Containers
@@ -768,6 +808,24 @@ if issecretvalue and issecretvalue(name) then
 end
 ```
 
+> **12.0.5 update — stricter unit identity rules.** In Patch 12.0.5, several `Unit*` APIs became stricter about secret unit identities. Patterns that worked by coincidence on 12.0.1 may now return `nil` or secret:
+>
+> - **`UnitName(unit)`** no longer accepts secret unit tokens — passing a secret-token unit returns `nil`.
+> - **`UnitSpellTargetName(unit)`** only returns names for player units.
+> - **`UnitTokenFromGUID(guid)`** will NOT return `arena*`, `nameplate*`, `boss*`, `party*`, `raid*`, `targettarget`, or `focustarget` tokens when identities are secret.
+> - **`UnitIsUnit(a, b)`** received a significant rewrite:
+>   - Returns a SECRET value if either argument is `targettarget` or `focustarget`.
+>   - Returns `nil` if the comparison between the two input tokens is forbidden.
+>   - **Allowed comparisons:** either unit is `player`, `pet`, `vehicle`, `mouseover`, `target`, `softenemy`, `softfriend`, `softinteract`, `focus`, `none`, `npc`, or `questnpc`.
+>   - **Also allowed:** one unit is a party/raid token (or its pet) AND the other is NOT a compound token, nameplate token, `targettarget`, or `focustarget`.
+>   - **All other comparisons return nil.**
+>
+> Practical impact: code like `UnitIsUnit("targettarget", "player")` for "is a mob targeting me?" detection may now fail with `nil` or a secret. Prefer unit events (`UNIT_TARGET`, `UNIT_THREAT_LIST_UPDATE`) or the `softenemy`/`softfriend` tokens when you can.
+>
+> **12.0.5 update — player stat APIs now inherit aura secrecy.** APIs returning player stats (power, speed, attack power, etc.) now return secret values **if the auras influencing them are secret**. In 12.0.1 these were unconditionally non-secret; in 12.0.5 they may inherit secrecy from aura state. Guard accordingly.
+>
+> **12.0.5 update — `Ambiguate` accepts secrets.** `Ambiguate(name, context)` now accepts secret string arguments from addons. Previously this was a minor friction point when processing names returned by some combat/secret APIs.
+
 ### Action Bar APIs
 
 All C_ActionBar functions may return secret values during combat:
@@ -813,6 +871,10 @@ if ok then
     nameFontString:SetText(nameText)
 end
 ```
+
+> **12.0.5 alternative — numeric formatter types.** Patch 12.0.5 added three new Lua formatter object types whose `Format` functions accept secret numbers natively (no `pcall` wrapper required): `AbbreviatedNumberFormatter` (e.g., "1.2M"), `NumericRuleFormatter` (locale-aware pluralization), and `SecondsFormatter` (duration/time). These share a base class `NumericFormatter`. For cooldown frames specifically, plug a formatter in via `cooldown:SetCountdownFormatter(formatter)` plus `cooldown:SetCountdownMillisecondsThreshold(seconds)` — see [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) for the cooldown-specific path. The `pcall(string.format)` pattern above remains necessary for pre-12.0.5 cross-client addons and for non-cooldown display paths that don't have formatter hooks yet.
+
+> **12.0.5 clarification — format precision still restricted.** String-format precision / field-width modifiers (e.g., `%.5s`, `%10s`, `%.1s`) remain restricted with secret string inputs (this rule was brought forward from 12.0.5 to 12.0.1 and re-stated in 12.0.5 release notes). `%s` without a modifier continues to work via `SetFormattedText` at the C++ level.
 
 **2. Use StatusBar for proportional bar display:**
 
@@ -1045,6 +1107,28 @@ local alpha = C_CurveUtil.EvaluateColorValueFromBoolean(notInterruptible, 0, 1)
 frame:SetAlphaFromBoolean(condition, 0, alpha)
 ```
 
+### Numeric Formatters (NEW in 12.0.5)
+
+Patch 12.0.5 added three Lua-level formatter object types whose `Format` functions accept secret numbers natively via duration objects. They share a base class `NumericFormatter`. These replace the `pcall(string.format)` workaround for display paths that support pluggable formatters.
+
+| Formatter | Use case | Example output |
+|-----------|----------|----------------|
+| `AbbreviatedNumberFormatter` | Human-readable abbreviations | "1.2M", "34.5K" |
+| `NumericRuleFormatter` | Locale-aware pluralization and rule-based formatting | varies by locale/rule |
+| `SecondsFormatter` | Duration / time formatting | "3m 42s", "0:42" |
+
+**Plug-in points:** Any API that accepts a `NumericFormatter` (including nil-to-clear). The most visible in 12.0.5 is cooldown frames:
+
+```lua
+-- 12.0.5+ cooldown countdown text configuration
+cooldown:SetCountdownFormatter(SecondsFormatter)         -- accepts secret durations
+cooldown:SetCountdownMillisecondsThreshold(10)           -- decimal rendering under 10s
+```
+
+See [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) for the cooldown-specific usage and cross-client fallback pattern, and [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full 12.0.5 delta.
+
+**Charge duration APIs gained `ignoreGCD` parameter (12.0.5):** `C_Spell.GetSpellChargeDuration(spellID, ignoreGCD)`, `C_ActionBar.GetActionChargeDuration(slot, ignoreGCD)`, and `C_SpellBook.GetSpellBookItemChargeDuration(spellBookItemSlotIndex, spellBookItemType, ignoreGCD)` accept an `ignoreGCD` boolean to exclude the global cooldown from the returned duration. At max charges, these APIs now consistently return a zero-span duration object (treated as fully elapsed by the framework).
+
 ### FontString:SetFormattedText() with Secret Values
 
 `FontString:SetFormattedText(formatString, ...)` definitively accepts secret values as format arguments from tainted addon code. The format string itself must be a regular Lua string (not secret), but `%s` arguments can be secret values. The C++ implementation handles the substitution internally.
@@ -1116,11 +1200,16 @@ statusBar:SetValue(UnitHealth(unit))
 
 #### What Is Secret vs. Non-Secret
 
-During combat, virtually ALL aura data fields are secret. The ONLY non-secret field is `auraInstanceID`.
+During combat, most aura data fields are secret. Several classification booleans are non-secret (and more became non-secret in 12.0.5 — see the update note below).
 
 | Aura Data Field | Secret During Combat? | Notes |
 |-----------------|----------------------|-------|
-| `auraInstanceID` | **NO** | The ONLY non-secret field |
+| `auraInstanceID` | **NO** | Stable instance identifier. See 12.0.5 re-randomization note below. |
+| `isHelpful` | **NO** (12.0.5+) | Buff flag. Safe to read/compare in Lua during combat as of 12.0.5. |
+| `isHarmful` | **NO** (12.0.5+) | Debuff flag. Safe in 12.0.5+. |
+| `isRaid` | **NO** (12.0.5+) | Raid-applicable flag. Safe in 12.0.5+. |
+| `isNameplateOnly` | **NO** (12.0.5+) | Nameplate-visibility-only. Safe in 12.0.5+. |
+| `isFromPlayerOrPlayerPet` | **NO** (12.0.5+) | "My" aura flag. Safe in 12.0.5+. |
 | `name` | **YES** | Cannot filter/compare by name |
 | `spellId` | **YES** | Cannot filter/compare by spell ID |
 | `icon` | **YES** | Cannot use for custom icon logic |
@@ -1128,29 +1217,34 @@ During combat, virtually ALL aura data fields are secret. The ONLY non-secret fi
 | `expirationTime` | **YES** | Cannot calculate remaining time |
 | `sourceUnit` | **YES** | Cannot identify caster |
 | `dispelName` | **YES** | Cannot filter by dispel type |
-| `isHarmful` | **YES** | Cannot distinguish buff/debuff |
-| `isHelpful` | **YES** | Cannot distinguish buff/debuff |
-| `isFromPlayerOrPlayerPet` | **YES** | Cannot filter "my" auras via data |
 | `applications` (stacks) | **YES** | Cannot read stack count |
 | `timeMod` | **YES** | Cannot read time modification |
 | `points` | **YES** | Cannot read aura values |
 
+> **12.0.5 update — classification fields non-secret.** As of Patch 12.0.5, the five classification booleans above (`isHelpful`, `isHarmful`, `isRaid`, `isNameplateOnly`, `isFromPlayerOrPlayerPet`) can be read from tainted Lua during combat. This lets addons perform Lua-side classification filtering ("is this my aura?", "is this a nameplate-only aura?") on results from `C_UnitAuras.GetAuraDataByIndex` / `GetAuraDataByAuraInstanceID` without needing additional API calls with filter strings. The identifier fields (`name`, `spellId`, `icon`, durations) remain secret. See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full 12.0.5 delta.
+>
+> **12.0.5 update — `auraInstanceID` re-randomizes at encounter boundaries.** `auraInstanceID` values are now re-randomized when entering encounters, Mythic+, and PvP. Any instance-id-keyed cache MUST be invalidated on `ENCOUNTER_START`, `CHALLENGE_MODE_START`, and arena/battleground boundary events.
+
 #### All Aura APIs Return Secret Data During Combat
 
-Every method of querying aura data is affected:
+Every method of querying aura data is affected. On 12.0.5+, classification booleans are an exception — see the note above.
 
 ```lua
--- ALL of these return secret data during combat (except auraInstanceID):
+-- During combat, the identifier and numeric fields on these aura objects are secret.
+-- Non-secret fields: auraInstanceID (all clients), isHelpful/isHarmful/isRaid/
+-- isNameplateOnly/isFromPlayerOrPlayerPet (12.0.5+).
 
 -- Method 1: GetUnitAuras (bulk query)
 local auras = C_UnitAuras.GetUnitAuras(unit, filter)
 for _, aura in ipairs(auras) do
-    -- aura.auraInstanceID  -- NON-SECRET (usable)
-    -- aura.name            -- SECRET (unusable for comparisons)
-    -- aura.spellId         -- SECRET (unusable for comparisons)
-    -- aura.icon            -- SECRET
-    -- aura.duration        -- SECRET
-    -- All other fields     -- SECRET
+    -- aura.auraInstanceID       -- NON-SECRET (usable on all clients)
+    -- aura.isHelpful            -- NON-SECRET on 12.0.5+; secret on older
+    -- aura.isHarmful            -- NON-SECRET on 12.0.5+; secret on older
+    -- aura.name                 -- SECRET (unusable for comparisons)
+    -- aura.spellId              -- SECRET (unusable for comparisons)
+    -- aura.icon                 -- SECRET
+    -- aura.duration             -- SECRET
+    -- Other identifier/numeric fields -- SECRET
 end
 
 -- Method 2: GetAuraDataByAuraInstanceID (single aura lookup)

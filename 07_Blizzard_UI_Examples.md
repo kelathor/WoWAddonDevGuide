@@ -40,6 +40,18 @@
 | `Blizzard_AddOnPerformance` | Addon performance monitoring |
 | `Blizzard_CombatAudioAlerts` | Text-to-speech combat alerts |
 
+### 12.0.5 Additions (Current Patch)
+
+Patch 12.0.5 added several APIs worth knowing about when studying Blizzard's UI source:
+
+- **Numeric formatters:** `AbbreviatedNumberFormatter`, `NumericRuleFormatter`, `SecondsFormatter` — new API-documentation files at `Blizzard_APIDocumentationGenerated\*FormatterAPIDocumentation.lua`. These accept secret numbers natively on their `Format` functions.
+- **Cooldown frame methods:** `cooldown:SetCountdownFormatter(formatter)` and `cooldown:SetCountdownMillisecondsThreshold(seconds)` let you customize countdown text without `pcall(string.format)` workarounds.
+- **Per-nameplate hit rect:** `nameplate:SetHitTestPoints(...)`, `:SetAllHitTestPoints(region)`, `:CanChangeHitTestPoints()`, `:ClearAllHitTestPoints()`, `:GetHitTestPoints()` documented at `Blizzard_APIDocumentationGenerated\FrameAPINamePlateDocumentation.lua`. Prefer this over the global `C_NamePlate.SetNamePlateSize`.
+- **Aura classification fields non-secret:** `isHelpful`, `isHarmful`, `isRaid`, `isNameplateOnly`, `isFromPlayerOrPlayerPet` on `AuraData` are readable during combat.
+- **Photo sharing, image sharing, encounter events:** new `Blizzard_APIDocumentationGenerated\PhotoSharingUIDocumentation.lua`, `ImageSharingConstantsDocumentation.lua`, `EncounterEventsDocumentation.lua` — primarily UI-surface additions for housing and encounter systems.
+
+See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full 12.0.5 delta and [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md) for secret-value handling patterns.
+
 ---
 
 ## Action Buttons

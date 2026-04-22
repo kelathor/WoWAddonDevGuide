@@ -51,8 +51,8 @@ When requesting addon development assistance, provide Claude with:
 ## WoW Addon Development Overview
 
 ### Current Version
-- **Retail (Mainline)**: 12.0.0 (Midnight)
-- **API Documentation Files**: 513+ comprehensive Lua files
+- **Retail (Mainline)**: 12.0.5 (Midnight, current) — patch line: 12.0.0 → 12.0.1 → 12.0.5 → 12.0.7 (planned); no 12.0.2/3/4/6
+- **API Documentation Files**: 513+ comprehensive Lua files (12.0.5 adds AbbreviatedNumberFormatter, NumericRuleFormatter, SecondsFormatter, FrameAPINamePlate, EncounterEvents, and others)
 - **Blizzard UI AddOns**: 281+ official addons with source code
 - **Total Source Files Analyzed**: 3,417+ files
 
@@ -81,6 +81,20 @@ The Midnight expansion (12.0.0) introduced massive security changes that broke m
 - Official encounter warnings system via `C_EncounterWarnings`
 - Timeline recording via `C_EncounterTimeline`
 - Player Housing system via `C_Housing` (see [11_Housing_System_Guide.md](11_Housing_System_Guide.md))
+
+### 12.0.5 Refinements (Current Patch)
+
+Changes added in 12.0.5 on top of the 12.0.0/12.0.1 baseline — see [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the full delta:
+
+- **Numeric formatters for secret values:** `AbbreviatedNumberFormatter`, `NumericRuleFormatter`, `SecondsFormatter` plus `Cooldown:SetCountdownFormatter(formatter)` and `Cooldown:SetCountdownMillisecondsThreshold(seconds)` — reduces reliance on `pcall(string.format)` for secret-number display
+- **Per-plate nameplate hit rect:** `nameplate:SetHitTestPoints(...)`, `:SetAllHitTestPoints(region)`, `:CanChangeHitTestPoints()`, `:ClearAllHitTestPoints()`, `:GetHitTestPoints()` — replaces the global `C_NamePlate.SetNamePlateSize` workaround
+- **Aura classification fields no longer secret:** `isHelpful`, `isHarmful`, `isRaid`, `isNameplateOnly`, `isFromPlayerOrPlayerPet` can be read during combat; identifier fields (`name`, `spellId`, `icon`, durations) remain secret
+- **`auraInstanceID` re-randomization** on encounter/M+/PvP entry — reset any instance-id-keyed cache at those boundaries
+- **`UnitIsUnit` restrictions** — comparisons involving `targettarget`/`focustarget`/nameplate tokens may return `nil` or secret; see migration guide for comparison allow-list
+- **`table.freeze(t)` / `table.isfrozen(t)`** for read-only tables
+- **New `"outfit"` action type** for `SecureActionButtonTemplate`
+- **Misc fixes:** `GetRaidRosterInfo` returns `"Unknown"` instead of `nil`; `UNIT_CONNECTION` reliability fixed; `IsInInstance` returns `true` inside delves; throttles relaxed during `PLAYER_LOGOUT` / `ADDONS_UNLOADING`
+- **New `Predicates` table** in generated API docs describes per-API secret/taint restrictions
 
 ### Core Technologies
 - **Language**: Lua 5.1 (modified)
@@ -129,7 +143,7 @@ Every addon requires a `.toc` file specifying metadata and file load order.
 
 **Essential Fields:**
 ```
-## Interface: 120000
+## Interface: 120005
 ## Title: Your Addon Name
 ## Author: Your Name
 ## Version: 1.0.0
@@ -142,7 +156,7 @@ Every addon requires a `.toc` file specifying metadata and file load order.
 **Comma-Separated Interface Versions (10.1.0+):**
 Since Patch 10.1.0, you can support multiple WoW versions with a single TOC file:
 ```
-## Interface: 120000, 110207, 40402, 11508
+## Interface: 120005, 110207, 40402, 11508
 ```
 This eliminates the need for separate `_Mainline.toc`, `_Classic.toc` files when your addon code is identical across versions. Use multiple TOC files only when you need to load different files per version.
 
