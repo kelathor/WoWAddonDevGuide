@@ -167,7 +167,6 @@ Many globals moved to `C_*` namespaces in 12.0.0. The globals typically survive 
 | `GetSpellInfo(id)` (number only) | `C_Spell.GetSpellInfo(id)` (names no longer accepted) |
 | `UnitAura()` | `C_UnitAuras.*` family |
 | `GetTransmogSlotInfo()` | `C_Transmog.*` family |
-| `GetVersatilityBonus(r)` | *Removed* — now baked into `GetCombatRatingBonus(r)` |
 
 **Note:** `PickupAction()` and `PlaceAction()` remain LIVE globals in 12.0.0 — they were NOT moved to `C_ActionBar`. See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the complete migration reference.
 
