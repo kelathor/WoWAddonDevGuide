@@ -388,6 +388,45 @@ function MyAddonMixin:InvalidateCache()
 end
 ```
 
+### Frame-Handle-Keyed Registries (Avoid String Keys)
+
+**Pattern:** When you maintain a registry of frames your addon has modified (e.g., "frames whose parent we changed and must restore on disable"), key the registry by **frame handle** rather than by string name.
+
+```lua
+-- Registry of frames we've adjusted
+E.FrameLocks = {}
+
+-- AT CREATION TIME (not later):
+local myPanel = CreateFrame("Frame", "MyAddon_BottomPanel", UIParent)
+E.FrameLocks[myPanel] = true                        -- Keyed by handle
+-- NOT: E.FrameLocks.MyAddon_BottomPanel = true      -- String key is stale-prone
+
+-- OR with metadata:
+E.FrameLocks[myPanel] = {
+    parent = myPanel:GetParent(),
+    strata = myPanel:GetFrameStrata(),
+}
+
+-- On teardown:
+for frame, meta in pairs(E.FrameLocks) do
+    if type(meta) == "table" then
+        frame:SetParent(meta.parent)
+        frame:SetFrameStrata(meta.strata)
+    end
+end
+```
+
+**Why handle-keyed beats string-keyed:**
+
+| Concern | String key (`tbl.ElvUI_TopPanel = true`) | Handle key (`tbl[frame] = true`) |
+|---------|------------------------------------------|---------------------------------|
+| Stale entries if frame is recreated | Silent stale entry; lookup by new frame fails | GC'd automatically; no stale |
+| Name collisions across addons | Possible | Impossible — each frame is unique |
+| Debug visibility | Only a name, no frame context | `pairs()` yields the actual frame |
+| Cost | Hash of string | Hash of table identity (same cost) |
+
+**Design note, not a hard rule.** Either approach works — but the handle-keyed form is more robust against refactors where a frame is lazily created or recreated on profile change. ElvUI v15.13 completed a migration from string keys to handle keys (`E.FrameLocks.ElvUI_BottomPanel = true` → `E.FrameLocks[LO.BottomPanel] = true`) across `Layout.lua`, `RaidUtility.lua`, and `ExtraAB.lua`, which also restructured holder frames to be created at file-load rather than inside an init function (so the handle is available when the lock is registered).
+
 ### State Machine Pattern
 
 ```lua
@@ -1294,6 +1333,9 @@ end
 3. **UI vs Logic**: Separate display code from decision-making code
 4. **Graceful degradation**: Have fallbacks when values are secret
 5. **Test thoroughly**: Use the debug CVars to test both restricted and unrestricted states
+6. **Prefer secret-accepting formatters for display**: `AbbreviateNumbers(val, breakpoint)` (12.0.0+) and `C_StringUtil.TruncateWhenZero(val)` (12.0.0+) are marked `AllowedWhenTainted` and are strictly more general than `UnitHealthPercent`/`UnitPowerPercent`. See [12a_Secret_Safe_APIs.md: AbbreviateNumbers](12a_Secret_Safe_APIs.md#abbreviatenumbers-general-purpose-secret-safe-numeric-formatter-1200).
+7. **Guard at the boundary, not at every line**: Wrap `issecretvalue` once as `NotSecretValue(v)` / `IsSecretValue(v)` helpers, then guard at arithmetic / comparison / string-op / table-index sites. Keep the interior of your functions untainted. See [12a_Secret_Safe_APIs.md: Pattern 11](12a_Secret_Safe_APIs.md#pattern-11-centralized-notsecretvalue--issecretvalue-guard-helpers).
+8. **Cache last-known ordering indices** when you need max/min across secret values — the comparison errors, but the index from the last safe update is still valid. See [12a_Secret_Safe_APIs.md: Pattern 10](12a_Secret_Safe_APIs.md#pattern-10-cache-last-known-index-for-ordered-comparisons-on-secret-numbers).
 
 ---
 

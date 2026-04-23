@@ -11,7 +11,11 @@
 8. [SecureTypes Containers](#securetypes-containers)
 9. [APIs That Return Secret Values](#apis-that-return-secret-values)
 10. [APIs That Accept Secret Values](#apis-that-accept-secret-values)
+    - [AbbreviateNumbers (general-purpose secret-safe formatter)](#abbreviatenumbers-general-purpose-secret-safe-numeric-formatter-1200)
+    - [C_StringUtil.TruncateWhenZero / WrapString](#c_stringutiltruncatewhenzero-1200)
 11. [Common Patterns and Solutions](#common-patterns-and-solutions)
+    - [Pattern 10: Cache Last-Known Index for Secret Comparisons](#pattern-10-cache-last-known-index-for-ordered-comparisons-on-secret-numbers)
+    - [Pattern 11: Centralized NotSecretValue / IsSecretValue Guards](#pattern-11-centralized-notsecretvalue--issecretvalue-guard-helpers)
 12. [Testing and Debugging](#testing-and-debugging)
 13. [Real-World Examples](#real-world-examples)
 14. [CooldownViewer Frame Taint Pitfalls](#cooldownviewer-frame-taint-pitfalls)
@@ -1129,6 +1133,107 @@ See [13_Cooldown_Viewer_Guide.md](13_Cooldown_Viewer_Guide.md) for the cooldown-
 
 **Charge duration APIs gained `ignoreGCD` parameter (12.0.5):** `C_Spell.GetSpellChargeDuration(spellID, ignoreGCD)`, `C_ActionBar.GetActionChargeDuration(slot, ignoreGCD)`, and `C_SpellBook.GetSpellBookItemChargeDuration(spellBookItemSlotIndex, spellBookItemType, ignoreGCD)` accept an `ignoreGCD` boolean to exclude the global cooldown from the returned duration. At max charges, these APIs now consistently return a zero-span duration object (treated as fully elapsed by the framework).
 
+### AbbreviateNumbers: General-Purpose Secret-Safe Numeric Formatter (12.0.0)
+
+`AbbreviateNumbers(value, breakpoint)` is a **general-purpose** numeric formatter marked `SecretArguments = "AllowedWhenTainted"` in Blizzard's API documentation (`Blizzard_APIDocumentationGenerated/LocalizationDocumentation.lua`). It accepts secret numbers as input and returns a **non-secret** formatted string. This makes it strictly more powerful than the `UnitHealthPercent` / `UnitPowerPercent` escape hatches (see [Non-Secret Alternatives](#non-secret-alternatives)) — those are limited to two specific APIs, whereas `AbbreviateNumbers` works on any numeric (crit rating, mastery bonus, movement speed, mana regen, etc.).
+
+**Recommendation:** When you need to display a ratio, percentage, or formatted number derived from an arithmetic expression that might involve secret operands, reach for `AbbreviateNumbers` **first**. Fall back to `UnitHealthPercent` / `UnitPowerPercent` only for direct health/power display.
+
+**Signature and `breakpointData` table shape:**
+
+```lua
+-- AbbreviateNumbers(value, breakpoint) -> formatted string
+-- breakpoint = { breakpointData = { <NumberAbbrevData entries> }, locale = <optional>, config = <optional cached> }
+-- Each NumberAbbrevData entry:
+--   breakpoint              number  -- value threshold at or above which this entry applies
+--   abbreviation            cstring -- abbreviation name (global string lookup if abbreviationIsGlobal=true)
+--   significandDivisor      number  -- value / significandDivisor = the displayed significand
+--   fractionDivisor         number  -- controls decimal precision (10^decimalPlaces)
+--   abbreviationIsGlobal    bool    -- false to use raw abbreviation string; true to look up in globals
+```
+
+The math: `displayed = (value / significandDivisor) / fractionDivisor`, then `fractionDivisor` scales the display digits back so decimal places appear correctly. Pick `significandDivisor` so that `value / significandDivisor` equals the target number you want to show.
+
+**Worked example — movement speed as percentage of base:**
+
+```lua
+local BASE_MOVEMENT_SPEED = BASE_MOVEMENT_SPEED  -- 7 yards/sec
+
+-- We want: speed=7 -> "100", speed=3.5 -> "50", speed=10.5 -> "150"
+-- Formula: percent = speed * 100 / 7 = speed / (7 * 0.01)
+-- So significandDivisor = BASE_MOVEMENT_SPEED * 0.01
+
+local data = {
+    breakpoint = 0,
+    abbreviation = '',
+    fractionDivisor = 1,              -- integer display (no decimals)
+    significandDivisor = BASE_MOVEMENT_SPEED * 0.01,
+    abbreviationIsGlobal = false,
+}
+local breakpoint = { breakpointData = { data } }
+
+-- Later, in OnEvent (speed may be secret in combat):
+local speed = GetUnitSpeed("player")
+local percent = AbbreviateNumbers(speed, breakpoint)  -- Returns "100" etc. as a non-secret string
+fontString:SetText(percent .. "%")                    -- Concatenation works (percent is not secret)
+```
+
+**Worked example — mastery bonus as percentage:**
+
+```lua
+local data = {
+    breakpoint = 0,
+    abbreviation = '',
+    fractionDivisor = 1,
+    significandDivisor = 1,           -- placeholder; set per-frame because coeffect varies
+    abbreviationIsGlobal = false,
+}
+local breakpoint = { breakpointData = { data } }
+
+local function UpdateMastery()
+    local _, coeffect = GetMasteryEffect()
+    local rating     = GetCombatRatingBonus(CR_MASTERY)
+    if issecretvalue and not issecretvalue(coeffect) then
+        -- rating * coeffect = displayed bonus percentage
+        data.significandDivisor = 1 / coeffect
+    end
+    local text = AbbreviateNumbers(rating or 0, breakpoint)  -- safe even if rating is secret
+    fontString:SetText(text .. "%")
+end
+```
+
+**Pattern notes:**
+- Mutate the per-addon `data` table live (e.g., when user changes `decimalLength`: `data.fractionDivisor = 10 ^ decimalLength`). Retain the same outer `breakpoint` object; Blizzard caches against it.
+- `breakpointData` can hold multiple entries sorted largest-first for size-gated abbreviations (e.g., ">=1M show 'M', >=1K show 'K'"). For simple ratio formatting a single `breakpoint = 0` entry is sufficient.
+- Returns a string — no further `format()` or arithmetic is needed for display.
+- Used in production by ElvUI 15.13+ (MovementSpeed, Mastery, AttackPower, ManaRegen, Versatility datatexts; `speed:percent*` tags) as the taint-safe replacement for `value / constant * 100`.
+
+### C_StringUtil.TruncateWhenZero (12.0.0)
+
+`C_StringUtil.TruncateWhenZero(number) -> string` is marked `SecretArguments = "AllowedWhenTainted"` in `Blizzard_APIDocumentationGenerated/StringUtilDocumentation.lua`. Blizzard's documentation: *"Formats the given number to a string as an integer (rounding down). If the integer is zero, returns an empty string."*
+
+This is the **taint-safe replacement for `val > 0 and tostring(val) or ""`** — the `val > 0` comparison errors on a secret `val`, but `TruncateWhenZero` accepts the secret natively and returns a non-secret string.
+
+```lua
+-- OLD (breaks on secret val):
+local text = val > 0 and format("%.0f", val) or ""
+
+-- NEW (12.0.0+, secret-safe):
+local text = C_StringUtil.TruncateWhenZero(val)  -- "42" or "" ; never errors
+fontString:SetText(text)
+```
+
+**Companion API — `C_StringUtil.WrapString`:** Also `AllowedWhenTainted`. Signature: `C_StringUtil.WrapString(infix, prefix, suffix) -> string`. Returns `prefix .. infix .. suffix` when infix is non-empty, else an empty string. This is the taint-safe replacement for `prefix and infix and suffix and (prefix..infix..suffix) or ""` with conditional wrapping. Used internally by oUF's `CreateTagFunc` for secret-string tag results.
+
+```lua
+-- Conditional " (count)" suffix when count is secret and may be zero-display:
+local countText = C_StringUtil.TruncateWhenZero(count)           -- "" or "N"
+local suffix    = C_StringUtil.WrapString(countText, " (", ")") -- "" or " (N)"
+fontString:SetText(baseLabel .. suffix)  -- concatenation is safe: suffix is non-secret
+```
+
+See [Quick Reference Table](#quick-reference-table) for consolidated listing with `AbbreviateNumbers`.
+
 ### FontString:SetFormattedText() with Secret Values
 
 `FontString:SetFormattedText(formatString, ...)` definitively accepts secret values as format arguments from tainted addon code. The format string itself must be a regular Lua string (not secret), but `%s` arguments can be secret values. The C++ implementation handles the substitution internally.
@@ -1674,6 +1779,84 @@ if issecretvalue(color.r) then return end  -- Then check fields
 -- Common with tooltip data where entire structures can be tainted
 -- Also applies to any API that returns tables during combat
 ```
+
+### Pattern 10: Cache Last-Known Index for Ordered Comparisons on Secret Numbers
+
+When you need to find the max/min across several values that may be secret (e.g., "which of melee/ranged/spell crit is highest?"), the naive `if a > b` comparison errors during combat. The idiom used by ElvUI v15.13 (Crit.lua) is to **cache the last successfully-resolved index in a module-level upvalue** and, when the inputs are secret, skip the comparison entirely and re-display the current value at the cached index.
+
+```lua
+-- Module-level state (retained across calls):
+local ratingIndex, spellIndex = CR_CRIT_MELEE, 2  -- defaults
+
+local function OnEvent(panel)
+    local critMelee  = GetCritChance()
+    local minSpell   = GetSpellCritChance(2)  -- holy
+
+    if issecretvalue and issecretvalue(minSpell) then
+        -- Secret phase: DO NOT compare. Use cached ratingIndex from last safe phase.
+        local text
+        if     ratingIndex == CR_CRIT_MELEE  then text = critMelee
+        elseif ratingIndex == CR_CRIT_RANGED then text = GetRangedCritChance()
+        else                                     text = GetSpellCritChance(spellIndex)
+        end
+        panel.text:SetFormattedText(displayString, text)
+        return
+    end
+
+    -- Safe phase: scan and update cached indices.
+    for i = 3, MAX_SPELL_SCHOOLS do
+        local chance = GetSpellCritChance(i)
+        if chance < minSpell then
+            minSpell, spellIndex = chance, i
+        end
+    end
+    local critRanged = GetRangedCritChance()
+    local best
+    if     minSpell   >= critRanged and minSpell >= critMelee then ratingIndex, best = CR_CRIT_SPELL,  minSpell
+    elseif critRanged >= critMelee                            then ratingIndex, best = CR_CRIT_RANGED, critRanged
+    else                                                           ratingIndex, best = CR_CRIT_MELEE,  critMelee end
+    panel.text:SetFormattedText(displayString, best)
+end
+```
+
+**Why this works:** `ratingIndex` is always a plain integer set in a previous non-combat / non-secret update, so it's never secret. When secret values block the comparison, you still know *which* value to show — you just can't re-rank the categories until out of combat. The display stays accurate for the dominant category (which rarely changes moment-to-moment during a fight).
+
+**Applicability:** Any "pick the highest / lowest of N secret numbers" logic. Common cases: best crit school, highest cooldown among tracked spells, top-DPS target selection, highest-threat unit. Do the ordering in your last known good state and cache the index; display the current value at that index during the secret phase.
+
+### Pattern 11: Centralized NotSecretValue / IsSecretValue Guard Helpers
+
+Sprinkling `issecretvalue(x)` throughout the codebase works but creates noise at every guard site. The idiom adopted by ElvUI (v15.13) and oUF is to define thin wrappers at the library level once, then use them liberally at arithmetic/string/comparison boundaries:
+
+```lua
+-- In a library init file (once):
+function oUF:IsSecretValue(value)
+    return issecretvalue and issecretvalue(value)
+end
+
+function oUF:NotSecretValue(value)
+    return not oUF:IsSecretValue(value)
+end
+
+-- Optionally re-expose on your addon's main table for terseness:
+E.NotSecretValue = oUF.NotSecretValue
+E.IsSecretValue  = oUF.IsSecretValue
+```
+
+This gives you two benefits:
+1. **Cross-client safety** — `issecretvalue` doesn't exist pre-12.0.0. The wrapper returns false there, so `if E:NotSecretValue(x) then <do arithmetic> end` degrades gracefully on Classic / Mists / TBC / Wrath.
+2. **Uniform guard idiom** — call sites read naturally: `if E:NotSecretValue(speed) and speed > 0 then ...`. The Lua short-circuit ensures the comparison is only evaluated when safe.
+
+**Where to place guards (from ElvUI v15.13 real-world usage):**
+
+| Boundary | Example | Notes |
+|---|---|---|
+| Before arithmetic | `if E:NotSecretValue(baseAP) then totalAP = baseAP + posAP + negAP end` | Any `+` `-` `*` `/` `%` on a secret errors |
+| Before comparison | `if E:NotSecretValue(speed) and speed > 0 then ...` | `>` `<` `>=` `<=` errors on secrets |
+| Before string ops | `local lower = E:NotSecretValue(text) and strlower(text)` | `strlower`, `strsub`, `utf8sub`, `==` on strings error |
+| Before table indexing | `if E:NotSecretValue(className) then return RAID_CLASS_COLORS[className] end` | Index with secret errors; fall back to `C_ClassColor.GetClassColor()` |
+| Before `format`/`string.format` | See [Pattern 8](#pattern-8-c-apis-as-secret-safe-fallbacks-for-lua-lookups) | Use `FontString:SetFormattedText` for display instead |
+
+The intent is: **treat every arithmetic or string operation that crosses the addon/API boundary as a potential secret-value site**, and guard explicitly. This is verbose but predictable — matches the "guard at the edge, trust the interior" principle for taint hygiene.
 
 ### UNIT_SPELLCAST_INTERRUPTED vs UNIT_SPELLCAST_FAILED: Different Payloads
 
@@ -2253,6 +2436,16 @@ frame:SetAlpha(alpha)  -- SetAlpha accepts the result natively
 | SecureNumber | `SecureTypes.CreateSecureNumber(v)` | Number with arithmetic |
 | SecureBoolean | `SecureTypes.CreateSecureBoolean(v)` | Boolean wrapper |
 | SecureFunction | `SecureTypes.CreateSecureFunction()` | Function wrapper |
+
+### Secret-Safe Formatters (`AllowedWhenTainted`)
+
+| API | Version | Purpose |
+|-----|---------|---------|
+| `AbbreviateNumbers(val, breakpoint)` | 12.0.0 | General numeric formatter; accepts secret number, returns non-secret string. See [AbbreviateNumbers: General-Purpose Secret-Safe Numeric Formatter (12.0.0)](#abbreviatenumbers-general-purpose-secret-safe-numeric-formatter-1200). |
+| `C_StringUtil.TruncateWhenZero(num)` | 12.0.0 | Taint-safe replacement for `val > 0 and tostring(val) or ""`. See [C_StringUtil.TruncateWhenZero (12.0.0)](#c_stringutiltruncatewhenzero-1200). |
+| `C_StringUtil.WrapString(infix, prefix, suffix)` | 12.0.0 | Taint-safe conditional wrapping when infix may be empty. |
+| `FontString:SetFormattedText(fmt, ...)` | 12.0.0 | Secret-safe format-and-display for FontStrings. See [FontString:SetFormattedText() with Secret Values](#fontstringsetformattedtext-with-secret-values). |
+| `AbbreviatedNumberFormatter` / `SecondsFormatter` / `NumericRuleFormatter` | 12.0.5 | Formatter objects for cooldown countdown text. See [Numeric Formatters (NEW in 12.0.5)](#numeric-formatters-new-in-1205). |
 
 ---
 

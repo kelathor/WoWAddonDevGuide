@@ -1006,6 +1006,37 @@ function UnitFrameMixin:UpdateHealPrediction()
 end
 ```
 
+#### oUF `AdditionalPower` Element: Implicit `displayPairs` Removed (Silent Breaking Change)
+
+**Affects:** Any oUF-based addon (ElvUI, SUF, Pitbull via oUF, custom layouts) using the `AdditionalPower` element on retail.
+
+As of the ElvUI_Libraries v15.13 oUF snapshot, `oUF/elements/additionalpower.lua` no longer carries its own fallback `displayPairs` table. Previously, if a consumer did not set `element.displayPairs`, oUF would populate it from `_G.ALT_POWER_BAR_PAIR_DISPLAY_INFO` or an internal Druid/Shaman/Priest fallback. That assignment was **deleted**; the visibility check now reads `if element.displayPairs and (...) then`, which short-circuits to "no secondary bar" when the consumer didn't supply the table.
+
+**Symptom:** Druid Balance mana bar (and Shaman Maelstrom / Priest Insanity) silently stops rendering. No error. Just a missing secondary bar.
+
+**Fix — consumer must now explicitly supply `displayPairs`:**
+
+```lua
+local CopyTable = CopyTable
+local ManaType  = { powerName = 'MANA', powerType = 0 }
+
+-- Use Blizzard's global if available, else the classic per-class fallback:
+local ALT_POWER_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
+    and CopyTable(_G.ALT_POWER_BAR_PAIR_DISPLAY_INFO)
+    or {
+        DRUID  = { [8]  = CopyTable(ManaType) },  -- Balance: LunarPower -> show mana bar
+        SHAMAN = { [11] = CopyTable(ManaType) },  -- Maelstrom
+        PRIEST = { [13] = CopyTable(ManaType) },  -- Insanity
+    }
+
+-- When creating the AdditionalPower element on your unit frame:
+local bars = CreateFrame("StatusBar", nil, frame)
+bars.displayPairs = ALT_POWER_INFO          -- REQUIRED as of this oUF version
+frame.AdditionalPower = bars                -- oUF element wiring
+```
+
+ElvUI v15.13 mirrors this in `Game/Shared/Modules/UnitFrames/Elements/ClassBars.lua` by exposing `UF.ALT_POWER_INFO` at the module level and assigning `bars.displayPairs = UF.ALT_POWER_INFO` during frame construction. Third-party oUF layouts should follow the same pattern or they will regress.
+
 ### Transmog Addons (Narcissus, BetterWardrobe, Mog It)
 
 **12.0 Changes - MAJOR OVERHAUL:**

@@ -1251,6 +1251,54 @@ NineSliceUtil.ApplyLayout(frame, layout)
 
 **Source:** `Blizzard_SharedXML\Mainline\SharedUIPanelTemplates.xml`
 
+### Blizzard DamageMeter `SessionWindow` Structure (post-12.0.0)
+
+Blizzard's built-in damage meter (paired with the `C_DamageMeter` API — see [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the API surface and [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md#c_damagemeter-apis) for secret-value handling) renders through a `SessionWindow` frame. The window is of interest to any addon that **skins** Blizzard UI (ElvUI, Skada-skinned, custom theme addons) or **extends** the damage meter with extra widgets.
+
+**Note:** The `MinimizeButton` / `MinimizeContainer` / `SetMinimized` additions described below are part of a **post-12.0.0 patch**. They are present in retail 12.0.x clients as of ElvUI v15.13 (April 2026) but are NOT in the 12.0.0 Blizzard UI source dump. If you are working against the 12.0.0 source locally, you will not find atlas definitions for `UI-QuestTrackerButton-Secondary-Collapse` / `UI-QuestTrackerButton-Secondary-Expand` there — check your live client or the most recent UI source snapshot.
+
+**Child structure (as of 12.0.x / April 2026):**
+
+| Child | Kind | Purpose |
+|---|---|---|
+| `SessionWindow.Header` | Frame | Title strip with dropdowns |
+| `SessionWindow.MinimizeButton` | Button | Collapse/expand toggle (new post-12.0.0) |
+| `SessionWindow.MinimizeContainer` | Frame | Holds `Background` texture + `ResizeButton` (new post-12.0.0) |
+| `SessionWindow.MinimizeContainer.Background` | Texture | Window background (was directly on SessionWindow pre-patch) |
+| `SessionWindow.MinimizeContainer.ResizeButton` | Button | Bottom-right resize grip |
+| `SessionWindow.SourceWindow` | Frame | Secondary window for "damage by source" view |
+| `SessionWindow.DamageMeterTypeDropdown` | Dropdown | Damage / healing / threat / etc. mode selector |
+| `SessionWindow.SessionDropdown` | Dropdown | Session picker (current / last / overall) |
+| `SessionWindow.SettingsDropdown` | Dropdown | Settings menu |
+| `SessionWindow.SessionTimer` | FontString / Frame | Elapsed timer text |
+| `SessionWindow.LocalPlayerEntry` | Frame | Bottom "local player anchored at the bottom" row |
+| `SessionWindow.ShowLocalPlayerEntry` | method | Hook point — fires when the sticky player row is (re-)shown |
+
+**Methods worth knowing:**
+
+| Method | Purpose | Hook use |
+|---|---|---|
+| `SessionWindow:SetMinimized(bool)` | Collapse (`true`) or expand (`false`) the window | `hooksecurefunc(window, "SetMinimized", handler)` — run skinning / atlas swaps on state change |
+| `SessionWindow:ShowLocalPlayerEntry()` | Reveals the sticky bottom player row | Skin the entry when it first appears |
+| `MinimizeButton:GetNormalTexture()` / `:GetPushedTexture()` | Access minimize-button textures to swap atlases | ElvUI swaps to `UI-QuestTrackerButton-Secondary-Collapse` / `UI-QuestTrackerButton-Secondary-Expand` based on `collapsed` parameter |
+
+**New Blizzard atlases (post-12.0.0):**
+
+- `UI-QuestTrackerButton-Secondary-Collapse` / `UI-QuestTrackerButton-Secondary-Collapse-Pressed`
+- `UI-QuestTrackerButton-Secondary-Expand` / `UI-QuestTrackerButton-Secondary-Expand-Pressed`
+
+These are the "secondary" (smaller / muted) variant of the quest-tracker collapse/expand glyphs. They are safe to reuse in your own addon's minimize buttons for visual consistency with Blizzard's shipping UI.
+
+**Migration notes for skinning addons:**
+
+| Old behavior | New behavior | Fix |
+|---|---|---|
+| `SessionWindow.Background` was directly on the SessionWindow | Background moved to `MinimizeContainer.Background` | Skin `SessionWindow.MinimizeContainer.Background` instead |
+| `ResizeButton` supported left-side anchoring via `IsRightSide()` method | Always anchored bottom-right; rotation simplified to `pi * 1.25` | Drop the `isRightSide ? 0.75π : 1.25π` branch |
+| Hook `AnchorToSessionWindow` to reposition the resize button | Hook `SetMinimized` instead for minimize-state-dependent skinning | Switch to `hooksecurefunc(window, "SetMinimized", ...)` |
+
+**Source of these findings:** ElvUI v15.13 `Game/Mainline/Skins/DamageMeter.lua`, verified against the 12.0.0 Blizzard UI source (which lacks the minimize additions). The atlas definitions themselves were not found in the 12.0.0 source dump, confirming these are post-12.0.0-patch additions to the shipping client.
+
 ---
 
 ## Frame Pooling and Object Reuse

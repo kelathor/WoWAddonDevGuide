@@ -1707,7 +1707,27 @@ Minor refinements to 12.0.0 systems:
 ```lua
 -- Some cooldown percent APIs removed:
 GetActionCooldownRemainingPercent()  -- REMOVED, use GetActionCooldown() math
+
+-- Versatility helpers merged into combat-rating bonus (12.0.0):
+GetVersatilityBonus(CR_VERSATILITY_DAMAGE_DONE)   -- REMOVED
+GetVersatilityBonus(CR_VERSATILITY_DAMAGE_TAKEN)  -- REMOVED
 ```
+
+**`GetVersatilityBonus` removed / semantic change:** The standalone `GetVersatilityBonus(rating)` function no longer exists in the 12.0.0 Blizzard UI source. The versatility contribution previously exposed through it is now **already included** in `GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE)` and `GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_TAKEN)`. Any addon still computing `GetCombatRatingBonus(...) + GetVersatilityBonus(...)` is **double-counting** on 12.0.0+.
+
+```lua
+-- OLD (pre-12.0.0):
+local bonusDmg   = GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE)
+                 + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_DONE)
+local bonusTaken = GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_TAKEN)
+                 + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_TAKEN)
+
+-- NEW (12.0.0+):
+local bonusDmg   = GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE)
+local bonusTaken = GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_TAKEN)
+```
+
+Verified in ElvUI v15.13 (`Game/Mainline/DataTexts/Versatility.lua`) and confirmed absent from the 12.0.0 Blizzard UI source dump.
 
 > **Note (12.0.1+, still applies in 12.0.5):** Doing arithmetic on secret `startTime`/`duration` values from `GetActionCooldown()` will fail in tainted contexts. Use duration objects via `C_Spell.GetSpellCooldownDuration()` or `C_LossOfControl.GetActiveLossOfControlDuration()` instead. 12.0.5 adds `Cooldown:SetCountdownFormatter()` and the new `AbbreviatedNumberFormatter`/`SecondsFormatter`/`NumericRuleFormatter` types, which accept secret numbers directly for rendering.
 
@@ -3636,6 +3656,9 @@ eventFrame:RegisterEvent("DAMAGE_METER_COMBAT_SESSION_UPDATED")
 | (no 12.0.0 equivalent) | `table.freeze(t)` / `table.isfrozen(t)` | 12.0.5 | Read-only table support |
 | `pcall()`-guarded `aura.isHelpful`/`isHarmful` | Direct field access | 12.0.5 | These fields no longer secret |
 | `type="macro"` outfit macro for button | `type="outfit"` on `SecureActionButtonTemplate` | 12.0.5 | Native outfit action type |
+| `GetCombatRatingBonus(r) + GetVersatilityBonus(r)` | `GetCombatRatingBonus(r)` alone | 12.0.0 | `GetVersatilityBonus` removed; talent bonus now baked into `GetCombatRatingBonus`. Summing both double-counts. |
+| `val / constant * 100` (on secret vals) | `AbbreviateNumbers(val, breakpoint)` | 12.0.0 | `AllowedWhenTainted`. General-purpose secret-safe numeric formatter. See [12a: AbbreviateNumbers](12a_Secret_Safe_APIs.md#abbreviatenumbers-general-purpose-secret-safe-numeric-formatter-1200). |
+| `val > 0 and tostring(val) or ""` (on secret vals) | `C_StringUtil.TruncateWhenZero(val)` | 12.0.0 | `AllowedWhenTainted`. See [12a: TruncateWhenZero](12a_Secret_Safe_APIs.md#c_stringutiltruncatewhenzero-1200). |
 
 ---
 

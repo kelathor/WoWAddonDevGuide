@@ -146,6 +146,7 @@ Combat-sensitive data is hidden from addons via "secret values":
 - **Native `StatusBar` frames accept secret values directly** (handled at C++ level) — `bar:SetValue(UnitHealth(unit))` works
 - **For custom bars / math:** use `UnitHealthPercent(unit, false, CurveConstants.ScaleTo100)` and `UnitPowerPercent(...)` — they return NON-SECRET 0-100 values
 - **To check:** `issecretvalue(value)` returns true if the value is secret
+- **For formatted display of any secret number:** `AbbreviateNumbers(value, { breakpointData = {...} })` (12.0.0, `AllowedWhenTainted`) returns a non-secret formatted string — more general than `UnitHealthPercent`/`UnitPowerPercent`. `C_StringUtil.TruncateWhenZero(n)` replaces `n > 0 and tostring(n) or ""` on secret numbers. See [12a_Secret_Safe_APIs.md](12a_Secret_Safe_APIs.md#abbreviatenumbers-general-purpose-secret-safe-numeric-formatter-1200).
 - Traditional combat log parsing is blocked — `COMBAT_LOG_EVENT_UNFILTERED` registration fails with `ADDON_ACTION_FORBIDDEN`
 - `C_DamageMeter` API data is SECRET-protected during combat — but workarounds exist: `pcall(string.format, "%.0f", secret)` extracts secret numbers as text; `StatusBar:SetValue(secret)` accepts secrets natively; array index from `combatSources` preserves sort order; after `PLAYER_REGEN_ENABLED` all values become readable
 
@@ -166,6 +167,7 @@ Many globals moved to `C_*` namespaces in 12.0.0. The globals typically survive 
 | `GetSpellInfo(id)` (number only) | `C_Spell.GetSpellInfo(id)` (names no longer accepted) |
 | `UnitAura()` | `C_UnitAuras.*` family |
 | `GetTransmogSlotInfo()` | `C_Transmog.*` family |
+| `GetVersatilityBonus(r)` | *Removed* — now baked into `GetCombatRatingBonus(r)` |
 
 **Note:** `PickupAction()` and `PlaceAction()` remain LIVE globals in 12.0.0 — they were NOT moved to `C_ActionBar`. See [12_API_Migration_Guide.md](12_API_Migration_Guide.md) for the complete migration reference.
 
