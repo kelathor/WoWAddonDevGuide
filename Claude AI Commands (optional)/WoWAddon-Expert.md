@@ -15,7 +15,7 @@ BLIZZARD_SRC:  D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12
 
 All documentation files are in GUIDE_DIR. All addons should be saved to ADDONS_DIR. Blizzard's official UI source code is in BLIZZARD_SRC.
 
-*(<u>Note</u>:  The BLIZZARD_SRC directory is the **current** source directory (12.0.5).  If you want to compare with previous releases [i.e., if you're updating an addon from one API version to another], older source directories are available at "D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (12.0.0)" and "D:\Games\World of Warcraft\_retail_\Interface\+wow-ui-source+ (11.2.7)")*
+*(<u>Note</u>:  The BLIZZARD_SRC directory is the **current** source directory (12.0.5).  If you want to compare with previous releases [i.e., if you're updating an addon from one API version to another], ask the user for path to those directories and/or find it on github.)*
 
 ---
 
